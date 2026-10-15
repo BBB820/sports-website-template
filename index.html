@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matchday</title>
+  <meta name="description" content="Team hub, live scores, news and fan zone.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#home"><span class="brand-mark">◆</span> Matchday</a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#home">Home</a>
+      <a href="#scores">Scores</a>
+      <a href="#team">Team</a>
+      <a href="#news">News</a>
+      <a href="#fans">Fan Zone</a>
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="Toggle dark mode">◐</button>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="view">
+      <div class="hero">
+        <p class="eyebrow" id="hero-league"></p>
+        <h1 id="hero-team"></h1>
+        <p class="lede" id="hero-tagline"></p>
+        <div class="next-match card" id="next-match"></div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h2>Latest results</h2><ul class="list" id="home-results"></ul></div>
+        <div class="card"><h2>Standings</h2><div id="home-table"></div></div>
+        <div class="card"><h2>Headlines</h2><ul class="list" id="home-news"></ul></div>
+      </div>
+    </section>
+
+    <!-- SCORES -->
+    <section id="scores" class="view">
+      <div class="section-head">
+        <h1>Scores</h1>
+        <div class="controls">
+          <select id="league-select" aria-label="League"></select>
+          <span class="status" id="scores-status"></span>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h2>Recent results</h2><ul class="list scores" id="scores-past"></ul></div>
+        <div class="card"><h2>Upcoming</h2><ul class="list scores" id="scores-next"></ul></div>
+      </div>
+      <div class="card"><h2>League table</h2><div id="scores-table"></div></div>
+    </section>
+
+    <!-- TEAM -->
+    <section id="team" class="view">
+      <div class="section-head"><h1>Team</h1></div>
+      <div class="grid-2">
+        <div class="card"><h2>Schedule</h2><ul class="list" id="team-schedule"></ul></div>
+        <div class="card">
+          <h2>Club info</h2>
+          <dl class="facts" id="team-facts"></dl>
+          <h2>Contact</h2>
+          <form class="contact" id="contact-form">
+            <label>Name <input name="name" required></label>
+            <label>Email <input name="email" type="email" required></label>
+            <label>Message <textarea name="message" rows="3" required></textarea></label>
+            <button type="submit">Send</button>
+            <p class="form-note" id="contact-note" role="status"></p>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Roster</h2>
+        <div class="filter-row" id="roster-filter"></div>
+        <div class="roster" id="team-roster"></div>
+      </div>
+    </section>
+
+    <!-- NEWS -->
+    <section id="news" class="view">
+      <div class="section-head">
+        <h1>News</h1>
+        <input type="search" id="news-search" placeholder="Search news" aria-label="Search news">
+      </div>
+      <div class="news-grid" id="news-list"></div>
+    </section>
+
+    <!-- FAN ZONE -->
+    <section id="fans" class="view">
+      <div class="section-head"><h1>Fan Zone</h1></div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Match prediction</h2>
+          <div id="predict"></div>
+        </div>
+        <div class="card">
+          <h2>Player of the month</h2>
+          <div id="poll"></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><h2>Club history</h2><ol class="timeline" id="history"></ol></div>
+        <div class="card">
+          <h2>Fan wall</h2>
+          <form class="wall-form" id="wall-form">
+            <input name="msg" maxlength="140" placeholder="Say something (140 chars)" required>
+            <button type="submit">Post</button>
+          </form>
+          <ul class="wall" id="wall"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span id="footer-team"></span> · Scores by <a href="https://www.thesportsdb.com" rel="noopener">TheSportsDB</a> when online
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
