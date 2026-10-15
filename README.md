@@ -1,15 +1,14 @@
 # Cubao Baller Club
 
-The team website for Cubao Baller Club. It's styled after the Hooperville player app (the light look: white cards, black pill tabs, Cabin and Abel fonts) and laid out like an NBA team site.
+The team website for Cubao Baller Club, laid out like an NBA team site: the NBA.com look on a computer, NBA-app density on a phone. Light mode is NBA.com (white page, black masthead); dark mode is the NBA app.
 
-- **Home**: team card with league rank for PPG, RPG, APG, FG%, 3PT% and OPPG; next game with countdown; latest results; team leaders; standings; club news
-- **Schedule**: upcoming games and results. Tap a game to open it.
-- **Game page**: a played game shows score by quarter, player of the game, top performers, team stats side by side, and Cubao's box score. A game not yet played shows tale of the tape, recent form and head to head.
-- **Roster**: players and staff. Tap a player to see their season averages and game log.
-- **Stats**: every player's numbers, per game or totals. Tap a column to sort.
-- **Standings**: W, L, PCT, GB, PF, PA and streak.
-
-Phone first, wider on a computer, light and dark.
+- **Score strip** across the top: the league's last round and next round
+- **Home**: headline story on a team-colour court, next game with countdown, record strip with league ranks (PPG, RPG, APG, FG%, 3PT%, OPPG), upcoming games, news, recent results, team leaders, standings
+- **Schedule**: upcoming games and results by month
+- **Game centre**: split team-colour scoreboard, line score; Summary (player of the game, game leaders, team stats) and Box score. Games not yet played show tale of the tape, recent form and head to head.
+- **Roster**: player cards. Tap one for the player page (big jersey number, season averages, game log).
+- **Stats**: team numbers with league rank; every player's numbers, sortable, per game or totals
+- **Standings** and **News**
 
 ## Make it yours
 

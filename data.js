@@ -15,13 +15,13 @@ window.SITE = {
 
   league: { name: "QC Saturday League", season: "Season 2026", city: "Quezon City" },
 
-  // Other teams: colour for their badge, emoji for their logo.
+  // Other teams: colour, logo emoji, and a three-letter code for the score strip.
   teams: {
-    "Northside Tigers": { color: "#e67e22", logo: "🐯" },
-    "Eastwood Eagles": { color: "#27ae60", logo: "🦅" },
-    "Hilltop Kings": { color: "#8e44ad", logo: "👑" },
-    "Bayside Bulls": { color: "#e74c3c", logo: "🐂" },
-    "Westgate Wolves": { color: "#1f3a5f", logo: "🐺" }
+    "Northside Tigers": { color: "#e67e22", logo: "🐯", short: "NST" },
+    "Eastwood Eagles": { color: "#27ae60", logo: "🦅", short: "EWE" },
+    "Hilltop Kings": { color: "#8e44ad", logo: "👑", short: "HTK" },
+    "Bayside Bulls": { color: "#e74c3c", logo: "🐂", short: "BYB" },
+    "Westgate Wolves": { color: "#1f3a5f", logo: "🐺", short: "WGW" }
   },
 
   // Cubao's roster. Put the captain first. Height in cm.
@@ -74,12 +74,13 @@ window.SITE = {
     {date: "2026-11-07T21:00", home: "Bayside Bulls", away: "Hilltop Kings"}
   ],
 
+  // Club news. A recap can name its game by date (game: "YYYY-MM-DD") to link to the box score.
   news: [
-    { date: "2026-10-11", tag: "Game recap", title: "Cubao pulls away late to stay on top",
+    { date: "2026-10-11", tag: "Game recap", game: "2026-10-10", title: "Cubao pulls away late to stay on top",
       body: "A 14–2 run in the fourth quarter put the game away and kept the club in first place." },
     { date: "2026-10-06", tag: "Club", title: "Open run every Wednesday night",
       body: "Tryouts for the second team happen at Wednesday open runs at Cubao Covered Court, 8pm." },
-    { date: "2026-09-28", tag: "Game recap", title: "Bounce-back win after the opening-night loss",
+    { date: "2026-09-28", tag: "Game recap", game: "2026-09-26", title: "Bounce-back win after the opening-night loss",
       body: "The club has now won five straight since dropping the season opener to Westgate." },
     { date: "2026-09-01", tag: "Club", title: "New season, new jerseys",
       body: "Orange home and black away kits arrive before tip-off on September 5." }
