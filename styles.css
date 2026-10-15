@@ -354,3 +354,58 @@ a.item:hover h3 { color: var(--team); }
   .row-scroll { grid-auto-columns: 82%; }
   .pcard .jersey .avatar { width: 48px; height: 48px; font-size: 1.1rem; margin-bottom: -16px; }
 }
+
+/* ── league pieces ── */
+/* Recompute the depth gradient wherever a block sets its own --team colour. */
+.top, .player-top, .pcard .jersey, .potg .jersey { --depth: linear-gradient(115deg, color-mix(in srgb, var(--team) 72%, #000), var(--team) 50%, color-mix(in srgb, var(--team) 62%, #000)); }
+.top.band, .player-top.band { --bandbg: var(--team); }
+.potg .jersey { background: var(--team); }
+
+.leaders-grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.leaders-grid.wide-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.board-list { display: grid; }
+.bl-head { display: flex; justify-content: space-between; padding: 12px 16px 8px; }
+.bl-head .label:first-child { color: var(--ink); font-weight: 800; }
+.bl-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-top: 1px solid var(--hair); }
+.bl-row:hover { background: var(--raise); }
+.bl-row .rk { width: 14px; font-family: var(--display); font-weight: 700; color: var(--soft); }
+.bl-row .nm { flex: 1; min-width: 0; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bl-row .nm small { display: block; font-family: var(--display); font-weight: 600; font-size: .78rem; letter-spacing: .06em; color: var(--soft); }
+.bl-row .num { font-size: 1.4rem; font-weight: 800; }
+.bl-row.first .num { font-size: 1.9rem; color: var(--team); }
+.bl-row.first .nm { font-size: 1.05rem; }
+
+.team-chips { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.tchip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 4px solid var(--c); }
+.tchip b { display: block; font-family: var(--display); font-weight: 700; font-size: 1.05rem; text-transform: uppercase; line-height: 1.05; }
+.tchip small { font-family: var(--display); font-weight: 600; color: var(--soft); }
+
+.team-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.tcard { display: grid; }
+.tcard:hover { border-color: var(--c); }
+.tcard-top { display: flex; justify-content: space-between; align-items: flex-end; padding: 18px; color: #fff; background: var(--court) center / cover, linear-gradient(115deg, color-mix(in srgb, var(--c) 72%, #000), var(--c) 55%, color-mix(in srgb, var(--c) 62%, #000)); }
+.tcard-top .label { color: rgb(255 255 255 / .9); font-size: .9rem; }
+.tcard-body { display: grid; gap: 2px; padding: 14px 18px 6px; }
+.tcard-body b { font-family: var(--display); font-weight: 800; font-size: 1.6rem; text-transform: uppercase; line-height: 1; }
+.tcard .mini { margin: 8px 0 0; }
+
+.games-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.filter { display: flex; align-items: center; gap: 10px; }
+.filter select { font: inherit; font-family: var(--display); font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: .04em; padding: 6px 10px; border: 1px solid var(--hair); border-radius: 6px; background: var(--card); color: var(--ink); }
+
+.gl-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.gl-side { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.gl-side.r { justify-content: flex-end; text-align: right; }
+.gl-side .num { font-size: 1.5rem; font-weight: 800; }
+.gl-side span { font-size: .9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+tr.cutline td { border-bottom: 2px dashed var(--team); }
+.scoreboard b small { font-size: .55em; opacity: .6; }
+.bteam:hover b { text-decoration: underline; }
+.player-top a.label:hover { color: #fff; }
+.sh h2 .tc { gap: 10px; }
+
+@media (max-width: 720px) {
+  .leaders-grid, .team-chips { grid-template-columns: 1fr; }
+  .gl-side span { font-size: .8rem; }
+}
