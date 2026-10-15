@@ -33,8 +33,13 @@ box: [{ no: "3", name: "Bernard Lopez", min: 30, pts: 14, fgm: 5, fga: 11, tpm: 
 
 ## Run locally
 
-Open `index.html`, or `python3 -m http.server 8000` in this folder.
+`npm start`, then open http://localhost:8080. Or just open `index.html`.
 
-## Publish (GitHub Pages)
+## Hosting on Railway
 
-Repo **Settings → Pages → Deploy from a branch → `main` / root**.
+`server.js` is a small web server with no dependencies, and `railway.json` tells Railway to run it.
+
+1. In Railway: **New Project → Deploy from GitHub repo → `sports-website-template`**.
+2. When the deploy finishes: the service's **Settings → Networking → Generate Domain**.
+
+Every push to `main` deploys again.
