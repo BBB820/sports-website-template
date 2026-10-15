@@ -1,13 +1,12 @@
 # Cubao Baller Club
 
-The team website for Cubao Baller Club, laid out like an NBA team site: the NBA.com look on a computer, NBA-app density on a phone. Light mode is NBA.com (white page, black masthead); dark mode is the NBA app.
+The team website for Cubao Baller Club: a modern take on 90s basketball. Cream paper, thick black outlines with hard shadows, wide slanted capitals, outlined jersey numbers and one orange-teal-purple stripe. Light and dark.
 
-- **Score strip** across the top: the league's last round and next round
-- **Home**: headline story on a team-colour court, next game with countdown, record strip with league ranks (PPG, RPG, APG, FG%, 3PT%, OPPG), upcoming games, news, recent results, team leaders, standings
+- **Home**: club name and record, the six team numbers with league rank, next game, last game, team leaders, standings, news
 - **Schedule**: upcoming games and results by month
-- **Game centre**: split team-colour scoreboard, line score; Summary (player of the game, game leaders, team stats) and Box score. Games not yet played show tale of the tape, recent form and head to head.
-- **Roster**: player cards. Tap one for the player page (big jersey number, season averages, game log).
-- **Stats**: team numbers with league rank; every player's numbers, sortable, per game or totals
+- **Game page**: scoreboard and score by quarter; Summary (player of the game, team stats) and Box score. A game not yet played shows tale of the tape, form and head to head.
+- **Roster**: player cards. Tap one for the player page (season numbers and game log).
+- **Stats**: every player's numbers, sortable, per game or totals
 - **Standings** and **News**
 
 ## Make it yours
