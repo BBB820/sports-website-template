@@ -171,6 +171,9 @@
   const venue = (g) => (g.home === US ? S.team.home : g.venue || "");
   const nameParts = (n) => { const w = n.trim().split(/\s+/); return w.length > 2 && /^(de|dela|del|van|von|da|di|la)$/i.test(w[w.length - 2]) ? [w.slice(0, -2).join(" "), w.slice(-2).join(" ")] : [w.slice(0, -1).join(" "), w[w.length - 1]]; };
   const res = (g) => (won(g, US) ? "W" : "L");
+  const initials = (n) => n.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const AVATAR = ["#1f3a5f", "#7a1f4d", "#1d6b52", "#5b2a86", "#6b5a12", "#1d5e6b", "#8a3b12", "#2e5b1d", "#4a2a6b", "#6b1d1d"];
+  const avatar = (n, cls = "") => `<span class="avatar ${cls}" style="--c:${AVATAR[seedOf(n) % AVATAR.length]}">${esc(initials(n))}</span>`;
   const player = (no) => roster.find((p) => p.no === no);
 
   function countdown(iso) {
@@ -191,7 +194,7 @@
       return `<div class="tline${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm">${esc(t)}<small>${esc(record(t))}${i ? "" : " · Home"}</small></span>${g.played ? `<span class="pts num">${g.score[i]}</span>` : ""}</div>`;
     };
     const foot = g.played ? `<span>Final</span><em>Box score →</em>` : `<span>${esc(time(g.date))}${venue(g) ? ` · ${esc(venue(g))}` : ""}</span><em>Preview →</em>`;
-    return `<a class="card game" href="#game/${g.id}"><div class="game-top"><span class="label">${esc(day(g.date))}</span>${stamp}</div>
+    return `<a class="card game" style="--c:${esc(TEAMS[opp(g)].color)}" href="#game/${g.id}"><div class="game-top"><span class="label">${esc(day(g.date))}</span>${stamp}</div>
       <div class="teams">${line(g.home, 0)}${line(g.away, 1)}</div><div class="game-foot">${foot}</div></a>`;
   }
 
@@ -199,7 +202,7 @@
     return `<div class="card leaders">${[["Points", "pts"], ["Rebounds", "reb"], ["Assists", "ast"], ["Efficiency", "eff"]].map(([label, key]) => {
       const best = [...SEASONS].filter((s) => s.gp).sort((a, b) => b.t[key] / b.gp - a.t[key] / a.gp)[0];
       if (!best) return "";
-      return `<a class="leader" href="#player/${encodeURIComponent(best.p.no)}"><span class="label">${label}</span><span class="big">${avg(best.t[key], best.gp)}</span><b>${esc(best.p.name)}</b><span class="soft" style="font-size:.8rem">#${esc(best.p.no)} · ${esc(best.p.pos)}</span></a>`;
+      return `<a class="leader" href="#player/${encodeURIComponent(best.p.no)}">${avatar(best.p.name)}<span class="label">${label}</span><span class="big">${avg(best.t[key], best.gp)}</span><b>${esc(best.p.name)}</b><span class="soft" style="font-size:.8rem">#${esc(best.p.no)} · ${esc(best.p.pos)}</span></a>`;
     }).join("")}</div>`;
   }
 
@@ -213,13 +216,23 @@
   }
 
   const recapGame = (n) => n.game && ours.find((x) => x.date.startsWith(n.game) && x.played);
-  function newsList(items) {
-    return `<div class="card news">${items.map((n) => {
+  function newsCards(items) {
+    return `<div class="newsgrid">${items.map((n) => {
       const g = recapGame(n);
-      const tag = `<div class="row"><span class="chip">${esc(n.tag)}</span><span class="label">${esc(day(n.date))}</span>${g ? `<span class="label">· ${esc(short(g.home))} ${g.score[0]}–${g.score[1]} ${esc(short(g.away))}</span>` : ""}</div>`;
-      const inner = `${tag}<h3>${esc(n.title)}</h3><p>${esc(n.body)}</p>`;
-      return g ? `<a class="item" href="#game/${g.id}">${inner}</a>` : `<div class="item">${inner}</div>`;
+      const art = g
+        ? `<div class="art" style="--c:${esc(TEAMS[opp(g)].color)}"><span class="vsart">${logo(g.home, "md")}<b class="num">${g.score[0]}–${g.score[1]}</b>${logo(g.away, "md")}</span></div>`
+        : `<div class="art"><span class="big-logo">${esc(S.team.logo)}</span></div>`;
+      const inner = `${art}<div class="story"><div class="row"><span class="chip">${esc(n.tag)}</span><span class="label">${esc(day(n.date))}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div>`;
+      return g ? `<a class="card ncard" href="#game/${g.id}">${inner}</a>` : `<div class="card ncard">${inner}</div>`;
     }).join("")}</div>`;
+  }
+
+  function nextPanel(g) {
+    const side = (t) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small>${esc(record(t))}</small></div>`;
+    return `<a class="nextpanel" href="#game/${g.id}">
+      <div class="np-top"><span class="label">Next game</span><span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span></div>
+      <div class="np-vs">${side(g.home)}<span class="at">${g.home === US ? "VS" : "@"}</span>${side(g.away)}</div>
+      <div class="np-top"><span class="label">${esc(day(g.date))} · ${esc(time(g.date))}</span><span class="label">Preview →</span></div></a>`;
   }
 
   // ---------- pages ----------
@@ -229,24 +242,24 @@
       const next = oursNext[0];
       const last = oursPlayed[oursPlayed.length - 1];
       const [first, ...rest] = US.split(" ");
-      return `<section class="top band">
+      return `<section class="top band"><span class="watermark" aria-hidden="true">${esc(S.team.logo)}</span>
           <div><span class="label">${esc(S.league.name)} · ${esc(S.league.season)}</span>
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
             <p class="meta"><b>${r.w}-${r.l}</b> · ${ordinal(r.rank)} in the league${r.streak ? ` · ${r.streak[0] === "W" ? "Won" : "Lost"} ${r.streak.slice(1)} straight` : ""}</p></div>
-          ${logo(US, "xl")}
+          ${next ? nextPanel(next) : logo(US, "xl")}
         </section>
         <section class="scoreboard band">${SIX.map(([label, key, low]) => `<div><span class="label">${label}</span><b class="num">${fmtSix(key, r[key])}</b><i>${ordinal(rankIn(US, key, low))}<span class="wide"> in league</span></i></div>`).join("")}</section>
+        ${oursNext.length > 1 ? `<section>${sh("Upcoming", "#schedule", "Full schedule")}<div class="row-scroll">${oursNext.slice(1, 5).map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
           <div>
-            ${next ? `<section>${sh("Next up", "#schedule", "Schedule")}${gameCard(next)}</section>` : ""}
             ${last ? `<section>${sh("Last game", "#schedule/results", "Results")}${gameCard(last)}</section>` : ""}
+            <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 2))}</section>
           </div>
           <div>
             <section>${sh("Team leaders", "#stats", "Stats")}${leaders()}</section>
             <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
           </div>
-        </div>
-        <section>${sh("News", "#news", "All news")}${newsList(S.news.slice(0, 2))}</section>`;
+        </div>`;
     },
 
     schedule(tab) {
@@ -278,7 +291,7 @@
           const [first, last] = nameParts(p.name);
           return `<a class="card pcard" href="#player/${encodeURIComponent(p.no)}">
             ${p.captain ? `<span class="chip cap">Captain</span>` : ""}
-            <span class="jersey">${esc(p.no)}</span>
+            <span class="jersey">${esc(p.no)}${avatar(p.name)}</span>
             <span class="nm"><small>${esc(first)}</small>${esc(last)}</span>
             <span class="label">${esc(p.pos)}${p.ht ? ` · ${p.ht} cm` : ""}</span>
             <div class="mini"><div><b class="num">${avg(s.t.pts, s.gp)}</b><span class="label">PPG</span></div><div><b class="num">${avg(s.t.reb, s.gp)}</b><span class="label">RPG</span></div><div><b class="num">${avg(s.t.ast, s.gp)}</b><span class="label">APG</span></div></div>
@@ -318,7 +331,7 @@
     },
 
     news() {
-      return head(US, "News") + newsList(S.news);
+      return head(US, "News") + newsCards(S.news);
     },
 
     game(id) {
