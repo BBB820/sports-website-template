@@ -204,9 +204,9 @@
 
   function standingsTable(compact) {
     return `<div class="card scroll"><table>
-      <thead><tr><th>#</th><th class="l">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th>GB</th><th>PPG</th><th>OPPG</th><th>L5</th>"}<th>Strk</th></tr></thead>
+      <thead><tr><th>#</th><th class="l sticky">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th>GB</th><th>PPG</th><th>OPPG</th><th>L5</th>"}<th>Strk</th></tr></thead>
       <tbody>${TABLE.map((r) => `<tr class="link${r.rank === 4 && !compact ? " cutline" : ""}" data-go="${tlink(r.team)}"><td>${r.rank}</td>
-        <td class="l"><span class="tc">${logo(r.team)}<b>${compact ? `<span class="wide">${esc(r.team)}</span><span class="narrow">${esc(short(r.team))}</span>` : esc(r.team)}</b></span></td><td>${r.w}</td><td>${r.l}</td>
+        <td class="l sticky"><span class="tc">${logo(r.team)}<b>${compact ? `<span class="wide">${esc(r.team)}</span><span class="narrow">${esc(short(r.team))}</span>` : esc(r.team)}</b></span></td><td>${r.w}</td><td>${r.l}</td>
         ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td>${r.gb ? r.gb : "–"}</td><td>${r.ppg.toFixed(1)}</td><td>${r.oppg.toFixed(1)}</td><td>${r.last5.filter((x) => x === "W").length}-${r.last5.filter((x) => x === "L").length}</td>`}
         <td>${r.streak || "–"}</td></tr>`).join("")}</tbody></table></div>`;
   }
@@ -320,7 +320,7 @@
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
           ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}
         </section>
-        ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid">${nextRound.map(gameCard).join("")}</div></section>` : ""}
+        ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
           <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
           ${lastRound.length ? `<section>${sh(`Week ${weekOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
@@ -328,7 +328,7 @@
         ${PO && !PO.champion ? (() => { const r = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0]; return `<section>${sh(`Playoffs · ${esc(r.name)}`, "#playoffs", "Bracket")}<div class="series-grid">${r.series.map(seriesCard).join("")}</div></section>`; })() : ""}
         ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
         <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
-        <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 3))}</section>`;
+        <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 3)).replace('class="newsgrid"', 'class="newsgrid swipe"')}</section>`;
     },
 
     games(tab) {
@@ -568,7 +568,10 @@
     const render = pages[page] || pages.home;
     app.innerHTML = render(arg);
     const navKey = NAV[page] || (pages[page] ? page : "home");
-    document.querySelectorAll(".nav a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === "#" + navKey ? "page" : "false"));
+    document.querySelectorAll(".nav a, .sheet a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === "#" + navKey ? "page" : "false"));
+    const tab = ["home", "games", "standings", "stats"].includes(navKey) ? navKey : "more";
+    document.querySelectorAll("[data-tab-for]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tabFor === tab));
+    closeSheet();
     document.title = page && page !== "home" && pages[page] ? `${page[0].toUpperCase() + page.slice(1)} · ${L.name}` : L.name;
   }
   let lastHash = location.hash;
@@ -579,6 +582,16 @@
     route();
     if (!samePage) window.scrollTo(0, 0);
   });
+
+  const sheet = document.getElementById("more-sheet");
+  const moreBtn = document.querySelector(".more-btn");
+  function closeSheet() { if (sheet) { sheet.hidden = true; moreBtn.setAttribute("aria-expanded", "false"); } }
+  moreBtn && moreBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    sheet.hidden = !sheet.hidden;
+    moreBtn.setAttribute("aria-expanded", String(!sheet.hidden));
+  });
+  document.addEventListener("click", (e) => { if (sheet && !sheet.hidden && !e.target.closest(".sheet")) closeSheet(); });
 
   document.addEventListener("click", (e) => {
     const go = e.target.closest("[data-go]");
@@ -599,7 +612,7 @@
 
   // ---------- masthead & footer ----------
   document.getElementById("ticker").innerHTML = ticker();
-  if (PO) document.querySelector('.nav a[href="#playoffs"]').hidden = false;
+  if (PO) document.querySelectorAll('a[href="#playoffs"]').forEach((a) => (a.hidden = false));
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">Hooperville</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
@@ -608,11 +621,12 @@
 
   const saved = store.get("theme", null);
   if (saved) document.documentElement.dataset.theme = saved;
-  document.querySelector(".theme").addEventListener("click", () => {
+  const switchTheme = () => {
     const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
     document.documentElement.dataset.theme = dark ? "light" : "dark";
     store.set("theme", dark ? "light" : "dark");
-  });
+  };
+  document.querySelectorAll(".theme, .sheet-theme").forEach((b) => b.addEventListener("click", switchTheme));
 
   route();
 })();
