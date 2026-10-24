@@ -379,3 +379,55 @@ main > .back:first-child { margin-top: 40px; }
 .src::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6b7079; }
 .src.live::before { background: #34c47c; box-shadow: 0 0 0 3px rgb(52 196 124 / .25); }
 .src a { color: #fff; text-decoration: underline; }
+
+/* ── pictures as logos ── */
+.logo.pic { background: #fff; overflow: hidden; }
+.logo.pic img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.nav a[hidden] { display: none; }
+
+/* ── champion ── */
+.champ { background: linear-gradient(160deg, rgb(0 0 0 / .55), rgb(0 0 0 / .35)); border: 1px solid rgb(255 214 102 / .5); }
+.champ .trophy { font-size: 1.6rem; line-height: 1; }
+.champ-team { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 6px 0; }
+.champ-team b { font-family: var(--display); font-weight: 800; font-size: 2rem; text-transform: uppercase; line-height: 1; }
+.champ .label { color: #ffd666; }
+.champ-mvp { font-family: var(--display); font-weight: 700; font-size: 1.15rem; text-transform: uppercase; }
+.champ-band { display: grid; justify-items: center; padding: 36px 20px; border-radius: var(--radius); background: var(--court) center / cover, linear-gradient(120deg, color-mix(in srgb, var(--team) 78%, #000), var(--team) 55%, color-mix(in srgb, var(--team) 70%, #000)); }
+
+/* ── awards ── */
+.awards { display: grid; }
+.award { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 18px 22px; border-top: 1px solid var(--hair); }
+.award:first-child { border-top: 0; }
+.award:hover { background: var(--raise); }
+.award-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #fff3d1; font-size: 1.3rem; }
+.award .label { color: #b07a00; }
+.award b { display: block; font-weight: 700; font-size: 1.08rem; line-height: 1.2; }
+.award small { color: var(--soft); font-size: .88rem; }
+.award .num { font-size: 1.3rem; font-weight: 800; white-space: nowrap; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .award-icon { background: #3a2f12; } }
+:root[data-theme="dark"] .award-icon { background: #3a2f12; }
+
+/* ── series & bracket ── */
+.series { display: grid; }
+.sr { display: grid; grid-template-columns: 20px auto 1fr auto; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--hair); }
+.sr:first-child { border-top: 0; }
+a.sr:hover b { color: var(--team); }
+.sr .seed { font-family: var(--display); font-weight: 600; color: var(--soft); font-size: .9rem; text-align: center; }
+.sr b { font-family: var(--display); font-weight: 700; font-size: 1.1rem; text-transform: uppercase; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr .num { font-size: 1.4rem; font-weight: 800; min-width: 1ch; text-align: right; }
+.sr.won b, .sr.won .num { color: var(--ink); }
+.sr.won .num { color: var(--team); }
+.sr.lose b, .sr.lose .num { color: var(--soft); font-weight: 600; }
+.sr.tbd b { color: var(--soft); font-weight: 600; font-family: var(--body); text-transform: none; font-size: .95rem; }
+.series-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 16px 12px; background: var(--raise); }
+.series-foot a.label { color: var(--ink); }
+.series-foot a.label:hover { color: var(--team); }
+.series-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.bracket { display: grid; gap: 20px; grid-template-columns: repeat(var(--rounds), minmax(250px, 1fr)); overflow-x: auto; padding-bottom: 6px; }
+.bracket-round { display: flex; flex-direction: column; justify-content: space-around; gap: 18px; }
+.bracket-round h3 { margin-bottom: -4px; }
+@media (max-width: 760px) {
+  .bracket { grid-template-columns: 1fr; }
+  .champ-team b { font-size: 1.6rem; }
+  .award { padding: 14px 16px; gap: 12px; }
+}

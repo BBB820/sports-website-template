@@ -26,7 +26,7 @@ Settings, in Railway under the service's **Variables**:
 | `LEAGUE_SLUG` | The league's address in Hooperville, the part after `/l/` | the first league whose name contains "cubao" |
 | `HOOPERVILLE_URL` | Where Hooperville's player app lives | `https://web-production-69499.up.railway.app` |
 
-Only regular-season games are shown; playoff games are left out, as Hooperville does for standings and stats. The branding (name, colour, logo, venue, email) always comes from `data.js`.
+Playoffs come through too: the bracket, series results, champion and Finals MVP, plus Season MVP (best efficiency per game) and Defensive Player (most steals plus blocks per game). Playoff games are kept out of standings and season stats, as Hooperville does. The league's name, and its logo and team logos when Hooperville has them, come from Hooperville. The colour, tagline, venue and email come from `data.js`.
 
 ## Make it yours
 

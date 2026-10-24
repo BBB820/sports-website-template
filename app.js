@@ -16,8 +16,9 @@
   const short = (team) => TEAMS[team]?.short || team.slice(0, 3).toUpperCase();
   const byShort = Object.fromEntries(teamNames.map((t) => [short(t), t]));
   const logo = (name, size = "sm") => {
-    const t = TEAMS[name] || { color: L.color, logo: L.logo };
-    return `<span class="logo ${size}" style="--c:${esc(t.color)}" aria-hidden="true">${esc(t.logo)}</span>`;
+    const t = TEAMS[name] || { color: L.color, logo: L.logo, img: L.img };
+    const inner = t.img ? `<img src="${esc(t.img)}" alt="">` : esc(t.logo);
+    return `<span class="logo ${size}${t.img ? " pic" : ""}" style="--c:${esc(t.color)}" aria-hidden="true">${inner}</span>`;
   };
   document.documentElement.style.setProperty("--team", L.color);
 
@@ -50,9 +51,13 @@
   }
 
   // ---------- games ----------
-  const games = S.schedule.map((g, id) => ({ ...g, id, played: Array.isArray(g.score) }))
+  // Every game, then the regular season on its own: playoff games stay out of standings and season stats.
+  const ALL = S.schedule.map((g, id) => ({ ...g, id, played: Array.isArray(g.score) }))
     .sort((a, b) => a.date.localeCompare(b.date));
-  const byId = Object.fromEntries(games.map((g) => [g.id, g]));
+  const games = ALL.filter((g) => !g.playoff);
+  const pgames = ALL.filter((g) => g.playoff);
+  const PO = S.playoffs && S.playoffs.rounds && S.playoffs.rounds.length ? S.playoffs : null;
+  const byId = Object.fromEntries(ALL.map((g) => [g.id, g]));
   const played = games.filter((g) => g.played);
   const upcoming = games.filter((g) => !g.played);
   const scoreOf = (g, team) => (g.home === team ? g.score[0] : g.score[1]);
@@ -62,6 +67,8 @@
   const teamGames = (team) => games.filter((g) => g.home === team || g.away === team);
   const dates = [...new Set(games.map((g) => g.date.slice(0, 10)))];
   const weekOf = (g) => dates.indexOf(g.date.slice(0, 10)) + 1;
+  const roundName = (r) => (PO && PO.rounds.find((x) => x.round === r) || {}).name || "Playoffs";
+  const stageOf = (g) => (g.playoff ? g.playoff.stage || roundName(g.playoff.round) : `Week ${weekOf(g)}`);
 
   // ---------- players ----------
   const ROLE = {
@@ -180,7 +187,7 @@
       const lose = g.played && g.score[i] < g.score[1 - i];
       return `<div class="tline${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm">${esc(t)}<small>${esc(record(t))}</small></span>${sc ? `<span class="pts num">${sc[i]}</span>` : ""}</div>`;
     };
-    const foot = g.played ? `<span>Week ${weekOf(g)}</span><em>Box score →</em>` : `<span>${esc(time(g.date))} · Week ${weekOf(g)}</span><em>Preview →</em>`;
+    const foot = g.played ? `<span>${esc(stageOf(g))}</span><em>Box score →</em>` : `<span>${esc(time(g.date))} · ${esc(stageOf(g))}</span><em>Preview →</em>`;
     const c = g.played ? TEAMS[winner(g)].color : L.color;
     return `<a class="card game" style="--c:${esc(c)}" href="#game/${g.id}"><div class="game-top"><span class="label">${esc(day(g.date))}</span>${stamp}</div>
       <div class="teams">${line(g.home, 0)}${line(g.away, 1)}</div><div class="game-foot">${foot}</div></a>`;
@@ -206,18 +213,18 @@
 
   // With live data there is no written news: recap the latest results instead.
   if (!S.news || !S.news.length) {
-    S.news = [...played].reverse().slice(0, 6).map((g) => {
+    S.news = ALL.filter((g) => g.played).reverse().slice(0, 6).map((g) => {
       const w = winner(g), l = opp(g, w);
       const best = boxScore(g, w).filter(appeared).sort((a, b) => b.pts - a.pts)[0];
       return {
-        date: g.date.slice(0, 10), tag: `Week ${weekOf(g)}`, game: g.date.slice(0, 10), team: w,
+        date: g.date.slice(0, 10), tag: stageOf(g), game: g.date.slice(0, 10), team: w,
         title: `${w} beat ${l} ${Math.max(...g.score)}–${Math.min(...g.score)}`,
         body: best ? `${best.name} led ${short(w)} with ${best.pts} points, ${best.reb} rebounds and ${best.ast} assists.` : `${w} improve to ${record(w)}.`
       };
     });
   }
 
-  const recapGame = (n) => n.game && games.find((x) => x.played && x.date.startsWith(n.game) && (!n.team || x.home === n.team || x.away === n.team));
+  const recapGame = (n) => n.game && ALL.find((x) => x.played && x.date.startsWith(n.game) && (!n.team || x.home === n.team || x.away === n.team));
   function newsCards(items) {
     return `<div class="newsgrid">${items.map((n) => {
       const g = recapGame(n);
@@ -239,15 +246,50 @@
   function featurePanel(g) {
     const side = (t) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small>${esc(record(t))} · ${ordinal(rowOf(t).rank)}</small></div>`;
     return `<a class="nextpanel" href="#game/${g.id}">
-      <div class="np-top"><span class="label">Game of the week</span><span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span></div>
+      <div class="np-top"><span class="label">${g.playoff ? esc(stageOf(g)) : "Game of the week"}</span><span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span></div>
       <div class="np-vs">${side(g.home)}<span class="at">VS</span>${side(g.away)}</div>
       <div class="np-top"><span class="label">${esc(day(g.date))} · ${esc(time(g.date))}</span><span class="label">Preview →</span></div></a>`;
+  }
+
+  // ---------- playoffs & awards ----------
+  const playerByKey = (key) => PLAYERS.find((p) => p.key === key);
+  function championPanel() {
+    const mvp = PO.mvp && playerByKey(PO.mvp.key);
+    return `<a class="nextpanel champ" href="#playoffs">
+      <div class="np-top"><span class="label">${esc(L.season)} champions</span><span class="trophy" aria-hidden="true">🏆</span></div>
+      <div class="champ-team">${logo(PO.champion, "lg")}<b>${esc(PO.champion)}</b></div>
+      ${PO.mvp ? `<div class="np-top"><span class="label">Finals MVP</span><b class="champ-mvp">${esc(mvp ? mvp.name : PO.mvp.name)}</b></div>` : ""}</a>`;
+  }
+  function seriesCard(x) {
+    if (!x) return "";
+    const row = (sd, wins) => sd
+      ? `<a class="sr${x.winner && x.winner !== sd.team ? " lose" : ""}${x.winner === sd.team ? " won" : ""}" href="${tlink(sd.team)}">${sd.seed ? `<span class="seed">${sd.seed}</span>` : `<span class="seed"></span>`}${logo(sd.team)}<b>${esc(sd.team)}</b><span class="num">${x.bye ? "" : x.winsA + x.winsB ? wins : x.winner === sd.team ? "✓" : ""}</span></a>`
+      : `<div class="sr tbd"><span class="seed"></span><span class="logo sm" style="--c:var(--hair)"></span><b>${x.bye ? "Bye" : "To be decided"}</b><span class="num"></span></div>`;
+    const fmt = { single: "One game", bo3: "Best of 3", twice: "Twice to beat", ttb: "Twice to beat" }[x.format] || "";
+    const gl = (x.games || []).map((i) => byId[i]).filter(Boolean);
+    return `<div class="card series">${row(x.a, x.winsA)}${row(x.b, x.winsB)}
+      <div class="series-foot"><span class="label">${esc(x.bye ? "Bye" : fmt)}</span>${gl.map((g, n) => `<a class="label" href="#game/${g.id}">G${n + 1}${g.played ? " " + g.score[0] + "–" + g.score[1] : ""} →</a>`).join("")}</div></div>`;
+  }
+  // Season awards worked out the way Hooperville does: best efficiency, and steals plus blocks, per game.
+  function awards() {
+    const most = Math.max(0, ...Object.values(SEASON).map((s) => s.gp));
+    const pool = Object.values(SEASON).filter((s) => s.gp && s.gp >= Math.ceil(most / 2));
+    const best = (f) => [...pool].sort((a, b) => f(b) - f(a))[0];
+    const mvp = best((s) => s.t.eff / s.gp), dpoy = best((s) => (s.t.stl + s.t.blk) / s.gp);
+    const item = (label, icon, s, val) => s ? `<a class="award" href="${plink(s.p)}"><span class="award-icon" aria-hidden="true">${icon}</span>
+      <span><span class="label">${label}</span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span><span class="num">${val}</span></a>` : "";
+    const fm = PO && PO.mvp && playerByKey(PO.mvp.key);
+    return `<div class="card awards">
+      ${PO && PO.mvp ? item("Finals MVP", "🏅", fm ? SEASON[fm.id] : null, "") : ""}
+      ${item("Season MVP", "🌟", mvp, mvp ? (mvp.t.eff / mvp.gp).toFixed(1) + " EFF" : "")}
+      ${item("Defensive player", "🛡️", dpoy, dpoy ? ((dpoy.t.stl + dpoy.t.blk) / dpoy.gp).toFixed(1) + " STL+BLK" : "")}</div>`;
   }
 
   // ---------- pages ----------
   const pages = {
     home() {
-      const feature = gameOfTheWeek();
+      const nextPlayoff = pgames.find((g) => !g.played);
+      const feature = PO && PO.champion ? null : nextPlayoff || gameOfTheWeek();
       const lastDay = played.length ? played[played.length - 1].date.slice(0, 10) : null;
       const lastRound = played.filter((g) => g.date.startsWith(lastDay));
       const nextDay = upcoming.length ? upcoming[0].date.slice(0, 10) : null;
@@ -276,13 +318,15 @@
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
             <p class="meta">${esc(L.tagline)}</p>
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
-          ${feature ? featurePanel(feature) : logo(null, "xl")}
+          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}
         </section>
         ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
           <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
           ${lastRound.length ? `<section>${sh(`Week ${weekOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
         </div>
+        ${PO && !PO.champion ? (() => { const r = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0]; return `<section>${sh(`Playoffs · ${esc(r.name)}`, "#playoffs", "Bracket")}<div class="series-grid">${r.series.map(seriesCard).join("")}</div></section>`; })() : ""}
+        ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
         <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
         <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 3))}</section>`;
     },
@@ -371,6 +415,17 @@
         <div class="stack">${seg([["roster", "Roster"], ["schedule", "Schedule"]], tab, "data-teamtab")}${body}</div>`;
     },
 
+    playoffs() {
+      if (!PO) return head(L.season, "Playoffs") + `<p class="card empty">The playoffs have not started yet.</p>`;
+      return head(`${L.name} · ${L.season}`, "Playoffs") + `<div class="stack">
+        ${PO.champion ? `<section class="champ-band">${championPanel()}</section>` : ""}
+        <div class="bracket" style="--rounds:${PO.rounds.length}">${PO.rounds.map((r) => `<section class="bracket-round"><h3 class="label">${esc(r.name)}</h3>${r.series.map(seriesCard).join("")}</section>`).join("")}</div>
+        ${PO.third ? `<section>${sh("Third place")}<div class="series-grid">${seriesCard(PO.third)}</div></section>` : ""}
+        ${PO.champion ? `<section>${sh("Season awards")}${awards()}</section>` : ""}
+        ${pgames.length ? `<section>${sh("Playoff games")}<div class="games-grid">${pgames.map(gameCard).join("")}</div></section>` : ""}
+      </div>`;
+    },
+
     news() {
       return head(L.name, "News") + newsCards(S.news);
     },
@@ -387,7 +442,7 @@
       const linescore = q ? `<div class="linescore scroll"><table>
           <thead><tr><th class="l">Team</th>${q[0].map((_, i) => `<th>${i < 4 ? "Q" + (i + 1) : "OT" + (q[0].length > 5 ? i - 3 : "")}</th>`).join("")}<th>T</th></tr></thead>
           <tbody>${[g.home, g.away].map((t, i) => `<tr><td class="l"><span class="tc">${logo(t)}<b>${esc(short(t))}</b></span></td>${q[i].map((v) => `<td>${v}</td>`).join("")}<td><b>${g.score[i]}</b></td></tr>`).join("")}</tbody></table></div>` : "";
-      return `<section class="stack"><div class="crumb"><button class="back" data-back aria-label="Back">←</button><span class="label">Week ${weekOf(g)} · ${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)}</span></div>
+      return `<section class="stack"><div class="crumb"><button class="back" data-back aria-label="Back">←</button><span class="label">${esc(stageOf(g))} · ${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)}</span></div>
         <div class="card"><div class="board" style="--h:${esc(TEAMS[g.home].color)};--a:${esc(TEAMS[g.away].color)}">${side(g.home)}${score}${side(g.away)}</div>${linescore}</div></section>
         ${g.played ? gamePlayed(g) : gamePreview(g)}`;
     },
@@ -493,9 +548,10 @@
 
   // ---------- score strip: the last round played and the next one ----------
   function ticker() {
-    const lastPlayed = dates.filter((d) => games.some((g) => g.date.startsWith(d) && g.played)).pop();
-    const nextDay = dates.find((d) => games.some((g) => g.date.startsWith(d) && !g.played));
-    return [lastPlayed, nextDay].filter(Boolean).map((d) => games.filter((g) => g.date.startsWith(d)).map((g) => {
+    const days = [...new Set(ALL.map((g) => g.date.slice(0, 10)))];
+    const lastPlayed = days.filter((d) => ALL.some((g) => g.date.startsWith(d) && g.played)).pop();
+    const nextDay = days.find((d) => ALL.some((g) => g.date.startsWith(d) && !g.played));
+    return [lastPlayed, nextDay].filter(Boolean).map((d) => ALL.filter((g) => g.date.startsWith(d)).map((g) => {
       const status = g.played ? "Final" : `${wkday(g.date)} ${time(g.date)}`;
       const line = (t, i) => {
         const lose = g.played && g.score[i] < g.score[1 - i];
@@ -543,6 +599,7 @@
 
   // ---------- masthead & footer ----------
   document.getElementById("ticker").innerHTML = ticker();
+  if (PO) document.querySelector('.nav a[href="#playoffs"]').hidden = false;
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">Hooperville</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`

@@ -23,6 +23,18 @@ const MASCOTS = [
 const PALETTE = ["#e67e22", "#27ae60", "#3498db", "#8e44ad", "#e74c3c", "#1f3a5f", "#16a085", "#c0392b", "#2c3e50", "#d35400"];
 const POINTS = { fg2_made: 2, fg3_made: 3, ft_made: 1 };
 
+// Hooperville's newer versions carry pictures (league and team logos). Pick up any field that
+// looks like one, whatever it is called, so the site shows them without knowing the exact name.
+function pictureOf(obj) {
+  if (!obj || typeof obj !== "object") return null;
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value !== "string" || !/logo|image|badge|crest|photo|picture|avatar/i.test(key)) continue;
+    if (/^data:image\//.test(value) || /^https?:\/\//.test(value)) return value;
+    if (value.startsWith("/")) return BASE + value;
+  }
+  return null;
+}
+
 const mascot = (name) => MASCOTS.find(([re]) => re.test(name.toLowerCase())) || null;
 
 // Three letters, unique within the league: "Bayside Bulls" → BAY, "Cubao Baller Club" → CBC.
@@ -89,7 +101,9 @@ async function build() {
     const members = (details[i].members || []).filter((p) => p.isPlayer);
     // Captain first, then by jersey number, as Hooperville lists them.
     members.sort((a, b) => (b.canManage - a.canManage));
+    const picture = pictureOf(t) || pictureOf(details[i]);
     teams[t.name] = {
+      ...(picture ? { img: picture } : {}),
       short: codes[t.name],
       color: t.color || PALETTE[i % PALETTE.length],
       logo: m ? m[1] : "🏀",
@@ -99,8 +113,8 @@ async function build() {
     };
   });
 
-  // Regular-season games only: Hooperville keeps playoff games out of standings and stats too.
-  const regular = (season.games || []).filter((g) => g.playoffRound == null);
+  // Playoff games are marked so the site keeps them out of standings and season stats, as Hooperville does.
+  const regular = (season.games || []).slice().sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const finals = regular.filter((g) => g.status === "final");
   const full = await inBatches(finals, 4, (g) => get(`/games/${g.id}`));
   const byId = Object.fromEntries(full.map((g) => [g.id, g]));
@@ -111,8 +125,10 @@ async function build() {
     reb: p.reb, ast: p.ast, stl: p.stl, blk: p.blk, tov: p.tov, pf: p.pf, pm: p.plusMinus
   });
 
+  const index = Object.fromEntries(regular.map((g, i) => [g.id, i]));
   const schedule = regular.map((g) => {
     const game = { date: localTime(g.startsAt), home: g.home.name, away: g.away.name };
+    if (g.playoffRound != null) game.playoff = { round: g.playoffRound, slot: g.playoffSlot, stage: g.stage || null };
     if (g.venue) game.venue = g.venue;
     if (g.status === "live") game.live = [g.homeScore, g.awayScore];
     const d = byId[g.id];
@@ -138,9 +154,30 @@ async function build() {
     return game;
   });
 
+  // The bracket, champion and Finals MVP, when the season has playoffs.
+  let playoffs = null;
+  const view = await get(`/seasons/${season.id}/playoffs`).catch(() => null);
+  if (view && view.rounds) {
+    const side = (x) => (x ? { team: x.team.name, seed: x.seed } : null);
+    const series = (x) => x && {
+      round: x.round, slot: x.slot, format: x.format, bye: !!x.bye, a: side(x.a), b: side(x.b),
+      winsA: x.winsA, winsB: x.winsB, needA: x.needA, needB: x.needB,
+      winner: x.winnerTeamId ? (season.teams.find((t) => t.id === x.winnerTeamId) || {}).name || null : null,
+      games: (x.games || []).map((g) => index[g.id]).filter((i) => i !== undefined)
+    };
+    playoffs = {
+      rounds: view.rounds.map((r) => ({ round: r.round, name: r.name, format: r.format, series: r.series.map(series) })),
+      third: series(view.third),
+      champion: view.champion ? view.champion.name : null,
+      mvp: view.mvp ? { key: view.mvp.username, name: view.mvp.displayName } : null
+    };
+  }
+
+  const leagueLogo = pictureOf(league);
   return {
+    playoffs,
     source: { name: "Hooperville", league: league.name, slug, season: season.name, url: `${BASE}/l/${slug}`, updated: new Date().toISOString() },
-    league: { name: league.name, season: season.name, city: league.location || "" },
+    league: { name: league.name, season: season.name, city: league.location || "", ...(leagueLogo ? { img: leagueLogo } : {}) },
     teams,
     schedule
   };

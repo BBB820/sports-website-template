@@ -2,7 +2,7 @@
 // The teams, players, schedule and results below are SAMPLE data (the Hooperville Trial League teams).
 window.SITE = {
   league: {
-    name: "Cubao Baller Club",
+    name: "Cubao Ballers Club",
     short: "CBC",
     color: "#ff6f00",
     logo: "🏀",
