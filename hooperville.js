@@ -2,11 +2,15 @@
 // the same shape as data.js. Everything it reads is public in Hooperville; no login is needed.
 //
 // Settings (Railway → the service → Variables):
-//   HOOPERVILLE_URL  the Hooperville player app, default https://web-production-69499.up.railway.app
+//   HOOPERVILLE_URL  where Hooperville lives. Default https://hoopr.id, with the old Railway address
+//                    as a backup when hoopr.id does not answer.
 //   LEAGUE_SLUG      the league's address in Hooperville (the part after /l/). If unset, the first
 //                    league whose name contains "cubao" is used.
 
-const BASE = (process.env.HOOPERVILLE_URL || "https://web-production-69499.up.railway.app").replace(/\/+$/, "");
+const OLD_ADDRESS = "https://web-production-69499.up.railway.app";
+const ADDRESSES = [...new Set([process.env.HOOPERVILLE_URL, "https://hoopr.id", OLD_ADDRESS]
+  .filter(Boolean).map((u) => u.replace(/\/+$/, "")))];
+let BASE = ADDRESSES[0];
 const SLUG = process.env.LEAGUE_SLUG || "";
 const CACHE_MS = 2 * 60 * 1000;
 const TIMEZONE = "Asia/Manila";
@@ -76,15 +80,28 @@ async function inBatches(items, size, fn) {
   return out;
 }
 
-async function findSlug() {
+// Use the first address that answers with Hooperville's league list.
+async function connect() {
+  let lastError;
+  for (const base of ADDRESSES) {
+    try {
+      const res = await fetch(base + "/api/leagues", { headers: { accept: "application/json" }, signal: AbortSignal.timeout(10000) });
+      const list = res.ok ? await res.json() : null;
+      if (Array.isArray(list)) { BASE = base; return list; }
+      lastError = new Error(`${base}: no league list`);
+    } catch (err) { lastError = err; }
+  }
+  throw lastError;
+}
+
+async function findSlug(leagues) {
   if (SLUG) return SLUG;
-  const leagues = await get("/leagues");
   const match = leagues.find((l) => /cubao/i.test(l.name));
   return match ? match.slug : null;
 }
 
 async function build() {
-  const slug = await findSlug();
+  const slug = await findSlug(await connect());
   if (!slug) return null;
   const league = await get(`/leagues/${encodeURIComponent(slug)}`);
   // The current season: the newest one that has teams.
@@ -176,7 +193,7 @@ async function build() {
   const leagueLogo = pictureOf(league);
   return {
     playoffs,
-    source: { name: "Hooperville", league: league.name, slug, season: season.name, url: `${BASE}/l/${slug}`, updated: new Date().toISOString() },
+    source: { name: BASE === OLD_ADDRESS ? "Hooperville" : new URL(BASE).host, league: league.name, slug, season: season.name, url: `${BASE}/l/${slug}`, updated: new Date().toISOString() },
     league: { name: league.name, season: season.name, city: league.location || "", ...(leagueLogo ? { img: leagueLogo } : {}) },
     teams,
     schedule
@@ -204,4 +221,4 @@ async function siteData() {
   }
 }
 
-module.exports = { siteData, BASE };
+module.exports = { siteData };

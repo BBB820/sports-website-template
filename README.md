@@ -15,7 +15,7 @@ Phone first, wider on a computer.
 
 ## Live stats from Hooperville
 
-The site reads the league live from **Hooperville**, the scoring app the table committee uses. Scores, both box scores, quarter scores, the Player of the Game, standings and leaders all come from what is recorded at the scorer's table. News becomes automatic game recaps. The footer shows **Live stats from Hooperville** when it is connected and **Sample data** when it is not.
+The site reads the league live from **Hooperville**, the scoring app the table committee uses. Scores, both box scores, quarter scores, the Player of the Game, standings and leaders all come from what is recorded at the scorer's table. News becomes automatic game recaps. The footer shows **Live stats from hoopr.id** when it is connected and **Sample data** when it is not.
 
 How it works: `hooperville.js` (on the site's own server) reads Hooperville's public pages for the league, its teams and every finished game, turns them into the site's format and keeps them for two minutes, so Hooperville gets a handful of requests every two minutes no matter how many people visit. If Hooperville cannot be reached, the last good copy is kept; with none, the site shows the sample in `data.js`.
 
@@ -24,7 +24,7 @@ Settings, in Railway under the service's **Variables**:
 | Variable | What it does | Default |
 |---|---|---|
 | `LEAGUE_SLUG` | The league's address in Hooperville, the part after `/l/` | the first league whose name contains "cubao" |
-| `HOOPERVILLE_URL` | Where Hooperville's player app lives | `https://web-production-69499.up.railway.app` |
+| `HOOPERVILLE_URL` | Where Hooperville lives | `https://hoopr.id`, falling back to the old `https://web-production-69499.up.railway.app` if hoopr.id does not answer |
 
 Playoffs come through too: the bracket, series results, champion and Finals MVP, plus Season MVP (best efficiency per game) and Defensive Player (most steals plus blocks per game). Playoff games are kept out of standings and season stats, as Hooperville does. The league's name, and its logo and team logos when Hooperville has them, come from Hooperville. The colour, tagline, venue and email come from `data.js`.
 

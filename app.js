@@ -615,7 +615,7 @@
   if (PO) document.querySelectorAll('a[href="#playoffs"]').forEach((a) => (a.hidden = false));
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
   const src = S.source
-    ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">Hooperville</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
+    ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
     : `<span class="src">Sample data · live stats appear once the league is on Hooperville</span>`;
   document.getElementById("footer").innerHTML = `<div class="in"><span>${esc(L.name)} · ${esc(L.venue)} · Since ${esc(L.founded)}</span>${src}<a href="mailto:${esc(L.email)}">${esc(L.email)}</a></div>`;
 
