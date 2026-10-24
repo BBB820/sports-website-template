@@ -33,6 +33,25 @@
   <footer class="footer" id="footer"></footer>
 
   <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script>
+    // Use the live league from Hooperville when the server can reach it; otherwise the sample in data.js.
+    (async () => {
+      const sample = window.SITE;
+      try {
+        const res = await fetch("/api/site-data", { cache: "no-store" });
+        const live = res.ok ? await res.json() : null;
+        if (live && live.teams && Object.keys(live.teams).length) {
+          window.SITE = {
+            ...live,
+            league: { ...sample.league, season: live.league.season || sample.league.season, city: live.league.city || sample.league.city },
+            news: []
+          };
+        }
+      } catch { /* offline or no server: keep the sample */ }
+      const app = document.createElement("script");
+      app.src = "app.js";
+      document.body.appendChild(app);
+    })();
+  </script>
 </body>
 </html>

@@ -374,3 +374,8 @@ main > .back:first-child { margin-top: 40px; }
   th:last-child, td:last-child { padding-right: 16px; }
 }
 .crumb { display: flex; align-items: center; gap: 14px; }
+.count.live { background: var(--loss); color: #fff; }
+.src { display: inline-flex; align-items: center; gap: 8px; }
+.src::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6b7079; }
+.src.live::before { background: #34c47c; box-shadow: 0 0 0 3px rgb(52 196 124 / .25); }
+.src a { color: #fff; text-decoration: underline; }

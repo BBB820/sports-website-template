@@ -13,9 +13,24 @@ The website for the Cubao Baller Club basketball league, in an NBA.com style: bl
 
 Phone first, wider on a computer.
 
+## Live stats from Hooperville
+
+The site reads the league live from **Hooperville**, the scoring app the table committee uses. Scores, both box scores, quarter scores, the Player of the Game, standings and leaders all come from what is recorded at the scorer's table. News becomes automatic game recaps. The footer shows **Live stats from Hooperville** when it is connected and **Sample data** when it is not.
+
+How it works: `hooperville.js` (on the site's own server) reads Hooperville's public pages for the league, its teams and every finished game, turns them into the site's format and keeps them for two minutes, so Hooperville gets a handful of requests every two minutes no matter how many people visit. If Hooperville cannot be reached, the last good copy is kept; with none, the site shows the sample in `data.js`.
+
+Settings, in Railway under the service's **Variables**:
+
+| Variable | What it does | Default |
+|---|---|---|
+| `LEAGUE_SLUG` | The league's address in Hooperville, the part after `/l/` | the first league whose name contains "cubao" |
+| `HOOPERVILLE_URL` | Where Hooperville's player app lives | `https://web-production-69499.up.railway.app` |
+
+Only regular-season games are shown; playoff games are left out, as Hooperville does for standings and stats. The branding (name, colour, logo, venue, email) always comes from `data.js`.
+
 ## Make it yours
 
-Everything is in `data.js`:
+Without Hooperville, everything is in `data.js`. With Hooperville connected, only `league` (the branding) is read from it:
 
 - `league`: name, colour, logo emoji, season, city, venue, email
 - `teams`: each team's three-letter code, colour, logo emoji and roster (number, name, position, height; captain first, first five are starters)

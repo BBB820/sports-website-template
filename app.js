@@ -69,7 +69,7 @@
     SF: { reb: 1, ast: 0.9, three: 0.35 }, PF: { reb: 1.5, ast: 0.6, three: 0.15 }, C: { reb: 1.9, ast: 0.5, three: 0.05 }
   };
   const ROSTERS = Object.fromEntries(teamNames.map((t) => [t, TEAMS[t].roster.map((p, i) => ({
-    ...p, team: t, id: `${short(t)}-${p.no}`, captain: i === 0, starter: i < 5,
+    ...p, team: t, id: `${short(t)}-${p.key || p.no}`, captain: p.captain ?? i === 0, starter: i < 5,
     talent: (i < 5 ? 1.4 : 0.8) + rng("talent:" + t + p.name)() * 0.6
   }))]));
   const PLAYERS = teamNames.flatMap((t) => ROSTERS[t]);
@@ -98,11 +98,17 @@
     }));
   }
 
+  // A box line counts as an appearance with minutes or any stat (real games may not run the clock).
+  const appeared = (l) => l && (l.min > 0 || ["pts", "reb", "ast", "stl", "blk", "tov", "pf", "fga", "fta"].some((k) => l[k] > 0));
+  const lineOf = (lines, p) => lines.find((b) => (p.key ? b.key === p.key : b.no === p.no));
+  const lineId = (team, l) => `${short(team)}-${l.key || l.no}`;
+
   const SUM_KEYS = ["pts", "fgm", "fga", "tpm", "tpa", "ftm", "fta", "reb", "ast", "stl", "blk", "tov", "pf"];
   const total = (lines) => Object.fromEntries(SUM_KEYS.map((k) => [k, lines.reduce((a, l) => a + (l[k] || 0), 0)]));
   const teamLine = (g, team) => total(boxScore(g, team));
 
   function quarters(g) {
+    if (g.quarters) return g.quarters;
     const r = rng("q:" + g.date + g.home);
     return [g.home, g.away].map((t) => split(scoreOf(g, t), [0, 1, 2, 3].map(() => 0.75 + r() * 0.5)));
   }
@@ -132,7 +138,7 @@
 
   // ---------- player season numbers ----------
   const SEASON = Object.fromEntries(PLAYERS.map((p) => {
-    const log = teamGames(p.team).filter((g) => g.played).map((g) => ({ g, l: boxScore(g, p.team).find((b) => b.no === p.no) })).filter((x) => x.l && x.l.min > 0);
+    const log = teamGames(p.team).filter((g) => g.played).map((g) => ({ g, l: lineOf(boxScore(g, p.team), p) })).filter((x) => appeared(x.l));
     const t = total(log.map((x) => x.l));
     t.min = log.reduce((a, x) => a + x.l.min, 0);
     t.eff = log.reduce((a, x) => a + eff(x.l), 0);
@@ -168,10 +174,11 @@
 
   // ---------- shared pieces ----------
   function gameCard(g) {
-    const stamp = g.played ? `<span class="label">Final</span>` : `<span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span>`;
+    const sc = g.played ? g.score : g.live;
+    const stamp = g.played ? `<span class="label">Final</span>` : g.live ? `<span class="count live">Live</span>` : `<span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span>`;
     const line = (t, i) => {
       const lose = g.played && g.score[i] < g.score[1 - i];
-      return `<div class="tline${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm">${esc(t)}<small>${esc(record(t))}</small></span>${g.played ? `<span class="pts num">${g.score[i]}</span>` : ""}</div>`;
+      return `<div class="tline${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm">${esc(t)}<small>${esc(record(t))}</small></span>${sc ? `<span class="pts num">${sc[i]}</span>` : ""}</div>`;
     };
     const foot = g.played ? `<span>Week ${weekOf(g)}</span><em>Box score →</em>` : `<span>${esc(time(g.date))} · Week ${weekOf(g)}</span><em>Preview →</em>`;
     const c = g.played ? TEAMS[winner(g)].color : L.color;
@@ -195,6 +202,19 @@
         <td class="l"><span class="tc">${logo(r.team)}<b>${compact ? `<span class="wide">${esc(r.team)}</span><span class="narrow">${esc(short(r.team))}</span>` : esc(r.team)}</b></span></td><td>${r.w}</td><td>${r.l}</td>
         ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td>${r.gb ? r.gb : "–"}</td><td>${r.ppg.toFixed(1)}</td><td>${r.oppg.toFixed(1)}</td><td>${r.last5.filter((x) => x === "W").length}-${r.last5.filter((x) => x === "L").length}</td>`}
         <td>${r.streak || "–"}</td></tr>`).join("")}</tbody></table></div>`;
+  }
+
+  // With live data there is no written news: recap the latest results instead.
+  if (!S.news || !S.news.length) {
+    S.news = [...played].reverse().slice(0, 6).map((g) => {
+      const w = winner(g), l = opp(g, w);
+      const best = boxScore(g, w).filter(appeared).sort((a, b) => b.pts - a.pts)[0];
+      return {
+        date: g.date.slice(0, 10), tag: `Week ${weekOf(g)}`, game: g.date.slice(0, 10), team: w,
+        title: `${w} beat ${l} ${Math.max(...g.score)}–${Math.min(...g.score)}`,
+        body: best ? `${best.name} led ${short(w)} with ${best.pts} points, ${best.reb} rebounds and ${best.ast} assists.` : `${w} improve to ${record(w)}.`
+      };
+    });
   }
 
   const recapGame = (n) => n.game && games.find((x) => x.played && x.date.startsWith(n.game) && (!n.team || x.home === n.team || x.away === n.team));
@@ -365,7 +385,7 @@
         : `<div class="bscore"><span class="vs">VS</span><span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span></div>`;
       const q = g.played ? quarters(g) : null;
       const linescore = q ? `<div class="linescore scroll"><table>
-          <thead><tr><th class="l">Team</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>T</th></tr></thead>
+          <thead><tr><th class="l">Team</th>${q[0].map((_, i) => `<th>${i < 4 ? "Q" + (i + 1) : "OT" + (q[0].length > 5 ? i - 3 : "")}</th>`).join("")}<th>T</th></tr></thead>
           <tbody>${[g.home, g.away].map((t, i) => `<tr><td class="l"><span class="tc">${logo(t)}<b>${esc(short(t))}</b></span></td>${q[i].map((v) => `<td>${v}</td>`).join("")}<td><b>${g.score[i]}</b></td></tr>`).join("")}</tbody></table></div>` : "";
       return `<section class="stack"><div class="crumb"><button class="back" data-back aria-label="Back">←</button><span class="label">Week ${weekOf(g)} · ${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)}</span></div>
         <div class="card"><div class="board" style="--h:${esc(TEAMS[g.home].color)};--a:${esc(TEAMS[g.away].color)}">${side(g.home)}${score}${side(g.away)}</div>${linescore}</div></section>
@@ -409,13 +429,14 @@
   const cmpHead = (g) => `<div class="cmp-head"><span class="tc">${logo(g.home)}<b>${esc(short(g.home))}</b></span><span class="tc"><b>${esc(short(g.away))}</b>${logo(g.away)}</span></div>`;
 
   function boxTable(g, team) {
-    const box = boxScore(g, team).filter((l) => l.min > 0);
+    const box = boxScore(g, team).filter(appeared);
     const t = total(box);
+    const mins = box.reduce((a, l) => a + (l.min || 0), 0);
     return `<section>${sh(`<span class="tc">${logo(team)} ${esc(team)}</span>`, null, g.home === team ? "Home" : "Away")}
       <div class="card scroll"><table>
         <thead><tr><th class="l sticky">Player</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>PF</th><th>FG</th><th>3P</th><th>FT</th><th>EFF</th></tr></thead>
-        <tbody>${[...box].sort((a, b) => b.min - a.min).map((l) => `<tr class="link" data-go="#player/${encodeURIComponent(short(team) + "-" + l.no)}"><td class="l sticky"><span class="soft">${esc(l.no)}</span>&nbsp; ${esc(l.name)}</td><td>${l.min}</td><td class="on">${l.pts}</td><td>${l.reb}</td><td>${l.ast}</td><td>${l.stl}</td><td>${l.blk}</td><td>${l.tov}</td><td>${l.pf}</td><td>${l.fgm}-${l.fga}</td><td>${l.tpm}-${l.tpa}</td><td>${l.ftm}-${l.fta}</td><td>${eff(l)}</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td class="l sticky">Totals</td><td>200</td><td>${t.pts}</td><td>${t.reb}</td><td>${t.ast}</td><td>${t.stl}</td><td>${t.blk}</td><td>${t.tov}</td><td>${t.pf}</td><td>${t.fgm}-${t.fga}</td><td>${t.tpm}-${t.tpa}</td><td>${t.ftm}-${t.fta}</td><td></td></tr></tfoot>
+        <tbody>${[...box].sort((a, b) => b.min - a.min).map((l) => `<tr class="link" data-go="#player/${encodeURIComponent(lineId(team, l))}"><td class="l sticky"><span class="soft">${esc(l.no)}</span>&nbsp; ${esc(l.name)}</td><td>${l.min}</td><td class="on">${l.pts}</td><td>${l.reb}</td><td>${l.ast}</td><td>${l.stl}</td><td>${l.blk}</td><td>${l.tov}</td><td>${l.pf}</td><td>${l.fgm}-${l.fga}</td><td>${l.tpm}-${l.tpa}</td><td>${l.ftm}-${l.fta}</td><td>${eff(l)}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td class="l sticky">Totals</td><td>${mins}</td><td>${t.pts}</td><td>${t.reb}</td><td>${t.ast}</td><td>${t.stl}</td><td>${t.blk}</td><td>${t.tov}</td><td>${t.pf}</td><td>${t.fgm}-${t.fga}</td><td>${t.tpm}-${t.tpa}</td><td>${t.ftm}-${t.fta}</td><td></td></tr></tfoot>
       </table></div></section>`;
   }
 
@@ -425,8 +446,8 @@
     if (tab === "box") return `<div class="stack">${tabs}${boxTable(g, g.home)}${boxTable(g, g.away)}</div>`;
     const [hl, al] = [teamLine(g, g.home), teamLine(g, g.away)];
     const all = [g.home, g.away].flatMap((t) => boxScore(g, t).map((l) => ({ ...l, team: t })));
-    const potg = [...all].sort((a, b) => eff(b) - eff(a))[0];
-    const potgP = playerById[short(potg.team) + "-" + potg.no];
+    const potg = (g.potg && all.find((l) => l.key === g.potg)) || [...all].sort((a, b) => eff(b) - eff(a))[0];
+    const potgP = playerById[lineId(potg.team, potg)];
     const top = (team, k) => [...boxScore(g, team)].sort((a, b) => b[k] - a[k])[0];
     const leaderRow = (label, k) => {
       const [a, b] = [top(g.home, k), top(g.away, k)];
@@ -436,7 +457,7 @@
       <div class="two">
         <div>
           <section>${sh("Player of the game")}
-            <a class="card potg" style="--team:${esc(TEAMS[potg.team].color)}" href="${plink(potgP)}"><span class="jersey">${esc(potg.no)}</span>
+            <a class="card potg" style="--team:${esc(TEAMS[potg.team].color)}" href="${potgP ? plink(potgP) : "#game/" + g.id}"><span class="jersey">${esc(potg.no)}</span>
               <span><b>${esc(potg.name)}</b><span class="label">${esc(short(potg.team))} · ${potg.pts} pts · ${potg.reb} reb · ${potg.ast} ast · ${potg.fgm}-${potg.fga} fg</span></span>
               <span class="big">${eff(potg)}<span class="label" style="display:block">Eff</span></span></a></section>
           <section>${sh("Game leaders")}<div class="card">${cmpHead(g)}<div class="compare">${leaderRow("Points", "pts")}${leaderRow("Rebounds", "reb")}${leaderRow("Assists", "ast")}</div></div></section>
@@ -523,7 +544,10 @@
   // ---------- masthead & footer ----------
   document.getElementById("ticker").innerHTML = ticker();
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
-  document.getElementById("footer").innerHTML = `<div class="in"><span>${esc(L.name)} · ${esc(L.venue)} · Since ${esc(L.founded)}</span><a href="mailto:${esc(L.email)}">${esc(L.email)}</a></div>`;
+  const src = S.source
+    ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">Hooperville</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
+    : `<span class="src">Sample data · live stats appear once the league is on Hooperville</span>`;
+  document.getElementById("footer").innerHTML = `<div class="in"><span>${esc(L.name)} · ${esc(L.venue)} · Since ${esc(L.founded)}</span>${src}<a href="mailto:${esc(L.email)}">${esc(L.email)}</a></div>`;
 
   const saved = store.get("theme", null);
   if (saved) document.documentElement.dataset.theme = saved;
