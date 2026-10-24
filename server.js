@@ -10,7 +10,7 @@ const types = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp"
 };
-const hidden = new Set(["server.js", "hooperville.js", "package.json", "railway.json"]);
+const hidden = new Set(["server.js", "hooperville.js", "package.json", "railway.json", "CLAUDE.md", "README.md"]);
 
 function sendJson(res, status, body) {
   res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
