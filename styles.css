@@ -421,6 +421,14 @@ main > .back:first-child { margin-top: 40px; }
 .logo.pic { background: #fff; overflow: hidden; }
 .logo.pic img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .nav a[hidden] { display: none; }
+.avatar.pic { overflow: hidden; background: var(--c); }
+.avatar.pic img, .jersey-big.pic img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.jersey-big.pic { overflow: hidden; }
+.art.photo { background: linear-gradient(0deg, color-mix(in srgb, var(--c, var(--team)) 55%, transparent), rgb(0 0 0 / .25)), var(--photo) center / cover no-repeat, linear-gradient(135deg, color-mix(in srgb, var(--c, var(--team)) 72%, #000), var(--c, var(--team))); }
+.art.photo .vsart { padding: 8px 16px; border-radius: 999px; background: rgb(0 0 0 / .45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.player-photo { position: relative; width: clamp(140px, 22vw, 200px); aspect-ratio: 1; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 4px rgb(255 255 255 / .9); background: rgb(0 0 0 / .2); }
+.player-photo img { width: 100%; height: 100%; object-fit: cover; }
+.player-photo b { position: absolute; right: 10%; bottom: 6%; font-size: 1.6rem; line-height: 1; padding: 4px 10px; border-radius: 999px; background: var(--team); color: #fff; }
 
 /* ── champion ── */
 .champ { background: linear-gradient(160deg, rgb(0 0 0 / .55), rgb(0 0 0 / .35)); border: 1px solid rgb(255 214 102 / .5); }

@@ -13,6 +13,9 @@
   // ---------- teams ----------
   const TEAMS = S.teams;
   const teamNames = Object.keys(TEAMS);
+  // Pictures added in data.js win over Hooperville's: team logos and player photos by name.
+  const PIC = S.pictures || {};
+  teamNames.forEach((t) => { if (PIC.teams && PIC.teams[t]) TEAMS[t].img = PIC.teams[t]; });
   const short = (team) => TEAMS[team]?.short || team.slice(0, 3).toUpperCase();
   const byShort = Object.fromEntries(teamNames.map((t) => [short(t), t]));
   const logo = (name, size = "sm") => {
@@ -76,7 +79,7 @@
     SF: { reb: 1, ast: 0.9, three: 0.35 }, PF: { reb: 1.5, ast: 0.6, three: 0.15 }, C: { reb: 1.9, ast: 0.5, three: 0.05 }
   };
   const ROSTERS = Object.fromEntries(teamNames.map((t) => [t, TEAMS[t].roster.map((p, i) => ({
-    ...p, team: t, id: `${short(t)}-${p.key || p.no}`, captain: p.captain ?? i === 0, starter: i < 5,
+    ...p, photo: (PIC.players && PIC.players[p.name]) || p.photo || null, team: t, id: `${short(t)}-${p.key || p.no}`, captain: p.captain ?? i === 0, starter: i < 5,
     talent: (i < 5 ? 1.4 : 0.8) + rng("talent:" + t + p.name)() * 0.6
   }))]));
   const PLAYERS = teamNames.flatMap((t) => ROSTERS[t]);
@@ -163,7 +166,12 @@
   const record = (team) => { const r = rowOf(team); return `${r.w}-${r.l}`; };
   const nameParts = (n) => { const w = n.trim().split(/\s+/); return w.length > 2 && /^(de|dela|del|van|von|da|di|la)$/i.test(w[w.length - 2]) ? [w.slice(0, -2).join(" "), w.slice(-2).join(" ")] : [w.slice(0, -1).join(" "), w[w.length - 1]]; };
   const initials = (n) => n.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-  const avatar = (p) => `<span class="avatar" style="--c:${esc(TEAMS[p.team].color)}">${esc(initials(p.name))}</span>`;
+  const avatar = (p) => p.photo
+    ? `<span class="avatar pic" style="--c:${esc(TEAMS[p.team].color)}"><img src="${esc(p.photo)}" alt="" loading="lazy"></span>`
+    : `<span class="avatar" style="--c:${esc(TEAMS[p.team].color)}">${esc(initials(p.name))}</span>`;
+  // A CSS background from a picture address; the team colour underneath shows if it fails to load.
+  const bgUrl = (u) => `url('${esc(encodeURI(u).replace(/'/g, "%27"))}')`;
+  const POOL = (L.photos || []).filter(Boolean);
   const plink = (p) => `#player/${encodeURIComponent(p.id)}`;
   const tlink = (team) => `#team/${encodeURIComponent(short(team))}`;
 
@@ -228,9 +236,11 @@
   function newsCards(items) {
     return `<div class="newsgrid">${items.map((n) => {
       const g = recapGame(n);
+      const pic = n.photo || (POOL.length ? POOL[(S.news.indexOf(n) + 1) % POOL.length] : null);
+      const ph = pic ? ` photo" style="--photo:${bgUrl(pic)};` : `" style="`;
       const art = g
-        ? `<div class="art" style="--c:${esc(TEAMS[winner(g)].color)}"><span class="vsart">${logo(g.home, "md")}<b class="num">${g.score[0]}–${g.score[1]}</b>${logo(g.away, "md")}</span></div>`
-        : `<div class="art"><span class="big-logo">${esc(L.logo)}</span></div>`;
+        ? `<div class="art${ph}--c:${esc(TEAMS[winner(g)].color)}"><span class="vsart">${logo(g.home, "md")}<b class="num">${g.score[0]}–${g.score[1]}</b>${logo(g.away, "md")}</span></div>`
+        : `<div class="art${ph}"><span class="big-logo">${pic ? "" : esc(L.logo)}</span></div>`;
       const inner = `${art}<div class="story"><div class="row"><span class="chip">${esc(n.tag)}</span><span class="label">${esc(day(n.date))}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div>`;
       return g ? `<a class="card ncard" href="#game/${g.id}">${inner}</a>` : `<div class="card ncard">${inner}</div>`;
     }).join("")}</div>`;
@@ -277,7 +287,7 @@
         <h2 class="big">${esc(f)} <span>${esc(last)}</span></h2>
         <p class="meta">${esc(s.p.team)} · #${esc(s.p.no)}${s.p.pos ? " · " + esc(s.p.pos) : ""}</p>
         <dl class="hero-stats">${[["PPG", "pts"], ["RPG", "reb"], ["APG", "ast"], ["EFF", "eff"]].map(([l, k]) => `<div><dt>${l}</dt><dd class="num">${avg(s.t[k], s.gp)}</dd></div>`).join("")}</dl><a class="hero-link phone-only" href="${plink(s.p)}">Player page →</a></div>
-        <a class="nextpanel who side-only" href="${plink(s.p)}"><span class="jersey-big num" style="--c:${esc(TEAMS[s.p.team].color)}">${esc(s.p.no)}</span>
+        <a class="nextpanel who side-only" href="${plink(s.p)}"><span class="jersey-big num${s.p.photo ? " pic" : ""}" style="--c:${esc(TEAMS[s.p.team].color)}">${s.p.photo ? `<img src="${esc(s.p.photo)}" alt="">` : esc(s.p.no)}</span>
           <div class="np-top"><span class="label">${esc(s.gp)} games</span><span class="label">Player page →</span></div></a>` });
     }
     if (played.length) {
@@ -301,8 +311,7 @@
 
   // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
   function hero(slides) {
-    const photos = (L.photos || []).filter(Boolean);
-    const bg = (i) => photos.length ? ` photo" style="--team:${esc(slides[i].c)};--photo:url('${esc(encodeURI(photos[i % photos.length]).replace(/'/g, "%27"))}')` : `" style="--team:${esc(slides[i].c)}`;
+    const bg = (i) => POOL.length ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(POOL[i % POOL.length])}` : `" style="--team:${esc(slides[i].c)}`;
     const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
       ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
       <button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></div>`;
@@ -672,7 +681,7 @@
       const s = SEASON[p.id], t = s.t;
       const [first, last] = nameParts(p.name);
       const six = [["PPG", avg(t.pts, s.gp)], ["RPG", avg(t.reb, s.gp)], ["APG", avg(t.ast, s.gp)], ["FG%", pct(t.fgm, t.fga)], ["3P%", pct(t.tpm, t.tpa)], ["MIN", avg(t.min, s.gp)]];
-      return `<section class="player-top band" style="--team:${esc(TEAMS[p.team].color)}"><button class="back" data-back aria-label="Back">←</button><span class="jersey" aria-hidden="true">${esc(p.no)}</span>
+      return `<section class="player-top band" style="--team:${esc(TEAMS[p.team].color)}"><button class="back" data-back aria-label="Back">←</button>${p.photo ? `<span class="player-photo"><img src="${esc(p.photo)}" alt="${esc(p.name)}"><b class="num">${esc(p.no)}</b></span>` : `<span class="jersey" aria-hidden="true">${esc(p.no)}</span>`}
           <div><a class="label" href="${tlink(p.team)}">${esc(p.team)} · ${esc(p.pos)}${p.ht ? ` · ${p.ht} cm` : ""}${p.captain ? " · Captain" : ""}</a>
             <h1><small>${esc(first)}</small>${esc(last)}</h1></div></section>
         <section class="scoreboard">${six.map(([l, v]) => `<div><span class="label">${l}</span><b class="num">${v}</b></div>`).join("")}</section>

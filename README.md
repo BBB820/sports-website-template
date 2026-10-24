@@ -68,6 +68,12 @@ box: {
 }
 ```
 
+## Pictures
+
+- **Banner and news photos**: `league.photos` in `data.js`, a list of picture addresses used in turn behind the Home slides and the news stories. It starts with free stock photos from Unsplash; replace them with the league's own (put the files in a `photos` folder and list them as `"photos/name.jpg"`).
+- **Team logos and player photos**: Hooperville's are used when it has them. To add or override, list them by name in `pictures` in `data.js`: `teams: { "Team name": "photos/logo.png" }`, `players: { "Player name": "photos/face.jpg" }`.
+- A picture that cannot load falls back to the team colour, initials or emoji.
+
 ## Run locally
 
 `npm start`, then open http://localhost:8080. Or just open `index.html`.

@@ -29,6 +29,8 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   player/CODE-username, game/ID, news. Sample games without a box score get generated box scores that add
   up to the real final score (seeded, so stable). Playoff games are kept out of standings and season stats.
 - `data.js` supplies branding (colour, logo emoji, tagline, venue, email) and the `signup` settings even when live.
+  Also pictures: `league.photos` (banner slides and news, stock Unsplash photos for now) and `pictures.teams` /
+  `pictures.players` (by name, override Hooperville's). Unsplash is blocked from the cloud sandbox, so check those on the live site.
 - `signups.js` stores season sign-ups (teams and free agents) in `signups.json` under the Railway volume
   (`RAILWAY_VOLUME_MOUNT_PATH`) or `DATA_DIR`, else `.data/` (lost on redeploy). Public: `POST /api/signups`,
   `GET /api/signups/summary` (counts only). Private: `GET /api/signups` with header `x-passcode` = `SIGNUP_PASSCODE`;

@@ -27,7 +27,7 @@ const MASCOTS = [
 const PALETTE = ["#e67e22", "#27ae60", "#3498db", "#8e44ad", "#e74c3c", "#1f3a5f", "#16a085", "#c0392b", "#2c3e50", "#d35400"];
 const POINTS = { fg2_made: 2, fg3_made: 3, ft_made: 1 };
 
-// Hooperville's newer versions carry pictures (league and team logos). Pick up any field that
+// Hooperville's newer versions carry pictures (league and team logos, player photos). Pick up any field that
 // looks like one, whatever it is called, so the site shows them without knowing the exact name.
 function pictureOf(obj) {
   if (!obj || typeof obj !== "object") return null;
@@ -125,7 +125,8 @@ async function build() {
       color: t.color || PALETTE[i % PALETTE.length],
       logo: m ? m[1] : "🏀",
       roster: members.map((p) => ({
-        key: p.username, no: p.jerseyNumber ?? "", name: p.displayName, pos: p.position || "", ht: p.heightCm || null, captain: !!p.canManage
+        key: p.username, no: p.jerseyNumber ?? "", name: p.displayName, pos: p.position || "", ht: p.heightCm || null, captain: !!p.canManage,
+        ...(pictureOf(p) ? { photo: pictureOf(p) } : {})
       }))
     };
   });

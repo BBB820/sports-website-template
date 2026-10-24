@@ -12,10 +12,21 @@ window.SITE = {
     venue: "Cubao Covered Court",
     founded: 2024,
     email: "cubaoballerclub@example.com",
-    // Photos behind the Home banner slides, one per slide in turn. Put the files in a "photos" folder,
-    // e.g. photos: ["photos/finals.jpg", "photos/team.jpg"]. Leave empty for plain team colours.
-    photos: []
+    // Photos behind the Home banner slides (one per slide, in turn) and the news stories.
+    // These are free stock photos from Unsplash for now; swap in the league's own, e.g. "photos/finals.jpg".
+    // If a photo can't load, the team colour shows instead.
+    photos: [
+      "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1600&q=70",
+      "https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1600&q=70",
+      "https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=1600&q=70",
+      "https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?auto=format&fit=crop&w=1600&q=70",
+      "https://images.unsplash.com/photo-1608245449230-4ac19066d2d0?auto=format&fit=crop&w=1600&q=70"
+    ]
   },
+
+  // The league's own pictures, by name. They win over anything Hooperville has.
+  // teams: { "Riverside Sharks": "photos/sharks-logo.png" }, players: { "Paul Rivera": "photos/paul-rivera.jpg" }
+  pictures: { teams: {}, players: {} },
 
   // Sign-ups for the next season. Set open: false to close them. Leave fee empty to hide it.
   signup: {

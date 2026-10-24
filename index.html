@@ -68,7 +68,8 @@
             ...live,
             league: { ...sample.league, ...Object.fromEntries(Object.entries(live.league).filter(([, v]) => v)) },
             news: [],
-            signup: sample.signup
+            signup: sample.signup,
+            pictures: sample.pictures
           };
         }
       } catch { /* offline or no server: keep the sample */ }
