@@ -156,7 +156,8 @@
 
   function countdown(iso) {
     const ms = new Date(iso) - new Date();
-    if (ms <= 0) return "Tip-off";
+    // Past tip-off with no score entered yet: live for about three hours, then waiting on the result.
+    if (ms <= 0) return ms > -3 * 36e5 ? "Live" : "Result pending";
     const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60;
     return d >= 1 ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
   }
@@ -233,35 +234,37 @@
       const nextRound = upcoming.filter((g) => g.date.startsWith(nextDay));
       const week = nextRound.length ? weekOf(nextRound[0]) : dates.length;
       const totalPts = played.reduce((a, g) => a + g.score[0] + g.score[1], 0);
-      const scorer = leadersIn("pts", 1)[0];
       const [first, ...rest] = L.name.split(" ");
-      const pulse = [
-        ["Week", `${week}<small>/${dates.length}</small>`, nextRound.length ? esc(mon(nextDay + "T12:00")) : "Season over"],
-        ["Teams", teamNames.length, esc(L.venue)],
-        ["Games played", played.length, `${upcoming.length} to go`],
-        ["Points / game", played.length ? (totalPts / played.length / 2).toFixed(1) : "–", "per team"],
-        ["Top team", esc(short(TABLE[0].team)), `${TABLE[0].w}-${TABLE[0].l}`],
-        ["Top scorer", scorer ? avg(scorer.t.pts, scorer.gp) : "–", scorer ? esc(scorer.p.name) : ""]
+      const stats = [
+        ["Week", `${week}<small> of ${dates.length}</small>`],
+        ["Teams", teamNames.length],
+        ["Games played", played.length],
+        ["Points per team", played.length ? (totalPts / played.length / 2).toFixed(1) : "–"]
       ];
-      return `<section class="top band"><span class="watermark" aria-hidden="true">${esc(L.logo)}</span>
-          <div><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
+      const result = (g) => {
+        const side = (t, i) => `<span class="rs-team${g.score[i] < g.score[1 - i] ? " lose" : ""}">${logo(t)}<b>${esc(short(t))}</b><span class="num">${g.score[i]}</span></span>`;
+        return `<a class="rs" href="#game/${g.id}">${side(g.home, 0)}${side(g.away, 1)}<span class="rs-end label">Final →</span></a>`;
+      };
+      const tile = (label, key, unit) => {
+        const s = leadersIn(key, 1)[0];
+        return s ? `<a class="card ltile" href="${plink(s.p)}"><span class="label">${label}</span>
+          <span class="ltile-val num">${avg(s.t[key], s.gp)}<small>${unit}</small></span>
+          <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
+      };
+      return `<section class="top band">
+          <div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
-            <p class="meta">${esc(L.tagline)}</p></div>
+            <p class="meta">${esc(L.tagline)}</p>
+            <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
           ${feature ? featurePanel(feature) : logo(null, "xl")}
         </section>
-        <section class="scoreboard band">${pulse.map(([label, v, sub]) => `<div><span class="label">${label}</span><b class="num">${v}</b><i>${sub}</i></div>`).join("")}</section>
-        ${lastRound.length ? `<section>${sh(`Week ${weekOf(lastRound[0])} scores`, "#games/results", "All results")}<div class="row-scroll">${lastRound.map(gameCard).join("")}</div></section>` : ""}
-        ${nextRound.length ? `<section>${sh(`Week ${week} · ${esc(mon(nextDay + "T12:00"))}`, "#games", "Full schedule")}<div class="row-scroll">${nextRound.map(gameCard).join("")}</div></section>` : ""}
+        ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
-          <div>
-            <section>${sh("League leaders", "#stats", "All stats")}<div class="leaders-grid">${leaderBoard("Points", "pts", "PPG", 3, true)}${leaderBoard("Rebounds", "reb", "RPG", 3, true)}${leaderBoard("Assists", "ast", "APG", 3, true)}${leaderBoard("Efficiency", "eff", "EFF", 3, true)}</div></section>
-            <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 2))}</section>
-          </div>
-          <div>
-            <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
-            <section>${sh("Teams", "#teams", "All teams")}<div class="team-chips">${TABLE.map((r) => `<a class="card tchip" style="--c:${esc(TEAMS[r.team].color)}" href="${tlink(r.team)}">${logo(r.team, "md")}<span><b>${esc(r.team)}</b><small>${r.w}-${r.l} · ${ordinal(r.rank)}</small></span></a>`).join("")}</div></section>
-          </div>
-        </div>`;
+          <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
+          ${lastRound.length ? `<section>${sh(`Week ${weekOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
+        </div>
+        <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
+        <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 3))}</section>`;
     },
 
     games(tab) {
@@ -344,7 +347,7 @@
             <p class="meta"><b>${r.w}-${r.l}</b> · ${ordinal(r.rank)} in the league${r.streak ? ` · ${r.streak[0] === "W" ? "Won" : "Lost"} ${r.streak.slice(1)} straight` : ""}</p></div>
           ${logo(team, "xl")}
         </section>
-        <section class="scoreboard band">${SIX.map(([label, key, low]) => `<div><span class="label">${label}</span><b class="num">${fmtSix(key, r[key])}</b><i style="color:${esc(t.color)}">${ordinal(rankIn(team, key, low))}<span class="wide"> in league</span></i></div>`).join("")}</section>
+        <section class="scoreboard">${SIX.map(([label, key, low]) => `<div><span class="label">${label}</span><b class="num">${fmtSix(key, r[key])}</b><i style="color:${esc(t.color)}">${ordinal(rankIn(team, key, low))}<span class="wide"> in league</span></i></div>`).join("")}</section>
         <div class="stack">${seg([["roster", "Roster"], ["schedule", "Schedule"]], tab, "data-teamtab")}${body}</div>`;
     },
 
@@ -364,9 +367,8 @@
       const linescore = q ? `<div class="linescore scroll"><table>
           <thead><tr><th class="l">Team</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>T</th></tr></thead>
           <tbody>${[g.home, g.away].map((t, i) => `<tr><td class="l"><span class="tc">${logo(t)}<b>${esc(short(t))}</b></span></td>${q[i].map((v) => `<td>${v}</td>`).join("")}<td><b>${g.score[i]}</b></td></tr>`).join("")}</tbody></table></div>` : "";
-      return `<button class="back" data-back aria-label="Back">←</button>
-        <section class="phead"><span class="label">Week ${weekOf(g)} · ${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)}</span></section>
-        <section class="card"><div class="board" style="--h:${esc(TEAMS[g.home].color)};--a:${esc(TEAMS[g.away].color)}">${side(g.home)}${score}${side(g.away)}</div>${linescore}</section>
+      return `<section class="stack"><div class="crumb"><button class="back" data-back aria-label="Back">←</button><span class="label">Week ${weekOf(g)} · ${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)}</span></div>
+        <div class="card"><div class="board" style="--h:${esc(TEAMS[g.home].color)};--a:${esc(TEAMS[g.away].color)}">${side(g.home)}${score}${side(g.away)}</div>${linescore}</div></section>
         ${g.played ? gamePlayed(g) : gamePreview(g)}`;
     },
 
@@ -379,7 +381,7 @@
       return `<section class="player-top band" style="--team:${esc(TEAMS[p.team].color)}"><button class="back" data-back aria-label="Back">←</button><span class="jersey" aria-hidden="true">${esc(p.no)}</span>
           <div><a class="label" href="${tlink(p.team)}">${esc(p.team)} · ${esc(p.pos)}${p.ht ? ` · ${p.ht} cm` : ""}${p.captain ? " · Captain" : ""}</a>
             <h1><small>${esc(first)}</small>${esc(last)}</h1></div></section>
-        <section class="scoreboard band">${six.map(([l, v]) => `<div><span class="label">${l}</span><b class="num">${v}</b></div>`).join("")}</section>
+        <section class="scoreboard">${six.map(([l, v]) => `<div><span class="label">${l}</span><b class="num">${v}</b></div>`).join("")}</section>
         <section>${sh("Game log", null, L.season)}
           <div class="card scroll"><table>
             <thead><tr><th class="l sticky">Game</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3P</th><th>FT</th></tr></thead>
