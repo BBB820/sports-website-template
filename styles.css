@@ -487,3 +487,65 @@ a.sr:hover b { color: var(--team); }
   .back { width: 44px; height: 44px; }
   .sh a { padding: 8px 0; }
 }
+
+/* ── season sign-ups ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; border: 2px solid var(--team); border-radius: 999px;
+  background: var(--team); color: #fff; font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.btn:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--hair); }
+.btn:disabled { opacity: .6; cursor: wait; }
+.link { border: 0; background: none; padding: 6px 0; color: var(--team); font-family: var(--display); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; justify-self: start; }
+.nav a.nav-cta { color: #fff; }
+.nav a.nav-cta::after { content: ""; width: 7px; height: 7px; margin-left: 7px; border-radius: 50%; background: var(--team); }
+.sheet a.sheet-cta { color: var(--team); }
+
+.su-band { display: grid; gap: 18px 32px; align-items: center; padding: 26px 28px; border-left: 6px solid var(--team); }
+@media (min-width: 860px) { .su-band { grid-template-columns: 1fr auto; } }
+.su-band h2 { font-size: 2rem; line-height: 1; margin: 6px 0 8px; }
+.su-band p { color: var(--soft); }
+.su-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.su-page { max-width: 760px; }
+.su-form { display: grid; gap: 16px; padding: 26px; }
+.su-form h3 { font-family: var(--display); font-weight: 800; font-size: 1.3rem; text-transform: uppercase; margin-top: 8px; }
+.su-form h3:first-child { margin-top: 0; }
+.su-form h3 small { font-family: var(--body); font-weight: 500; font-size: .85rem; text-transform: none; margin-left: 6px; }
+.fld { display: grid; gap: 6px; }
+.fld > span { font-family: var(--display); font-weight: 600; font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; color: var(--soft); }
+.fld small { color: var(--soft); font-size: .82rem; }
+.su-form input, .su-form select, .su-form textarea {
+  width: 100%; font: inherit; font-size: 1rem; color: var(--ink); background: var(--page); border: 1px solid var(--hair); border-radius: 10px; padding: 12px 14px; }
+.su-form input:focus, .su-form select:focus, .su-form textarea:focus { outline: 2px solid color-mix(in srgb, var(--team) 60%, transparent); outline-offset: 1px; border-color: transparent; }
+.su-form textarea { resize: vertical; }
+.fld-row { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.fld-color input { height: 48px; padding: 4px; cursor: pointer; }
+.roster-rows { display: grid; gap: 8px; }
+.rr { display: grid; grid-template-columns: 24px 1fr 64px 84px; gap: 8px; align-items: center; }
+.rr.extra { display: none; }
+.rr-n { font-family: var(--display); font-weight: 600; color: var(--soft); text-align: right; }
+.rr input, .rr select { padding: 10px 12px; }
+.check { display: flex; gap: 12px; align-items: flex-start; font-size: .95rem; color: var(--soft); }
+.check input { width: 22px; height: 22px; flex: none; margin-top: 2px; accent-color: var(--team); }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.form-error { color: var(--loss); font-weight: 600; }
+.su-done { display: grid; justify-items: center; gap: 10px; padding: 40px 24px; text-align: center; }
+.su-done h3 { font-family: var(--display); font-weight: 800; font-size: 2rem; text-transform: uppercase; }
+.su-done p { color: var(--soft); max-width: 46ch; }
+.su-check { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; background: var(--win); color: #fff; font-size: 2rem; }
+.narrow-form { max-width: 420px; }
+.su-stats { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.su-stats .card { display: grid; padding: 16px 22px; min-width: 130px; }
+.su-stats b { font-size: 2.2rem; line-height: 1; }
+.warn { padding: 16px 20px; border-left: 5px solid var(--loss); color: var(--ink); }
+.mini-roster { margin: 8px 0 0; padding-left: 18px; text-align: left; font-family: var(--body); font-weight: 500; font-size: .9rem; }
+details summary { cursor: pointer; }
+.note-cell { white-space: normal; min-width: 200px; font-weight: 500; }
+
+@media (max-width: 760px) {
+  .su-band { padding: 20px; }
+  .su-band h2 { font-size: 1.6rem; }
+  .su-actions .btn { flex: 1; }
+  .su-form { padding: 18px; }
+  .fld-row { grid-template-columns: 1fr; }
+  .rr { grid-template-columns: 20px 1fr 52px 72px; gap: 6px; }
+}

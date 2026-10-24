@@ -28,7 +28,11 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 - `app.js` renders every page with hash routing: home, games, standings, stats, playoffs, teams, team/CODE,
   player/CODE-username, game/ID, news. Sample games without a box score get generated box scores that add
   up to the real final score (seeded, so stable). Playoff games are kept out of standings and season stats.
-- `data.js` supplies branding (colour, logo emoji, tagline, venue, email) even when live.
+- `data.js` supplies branding (colour, logo emoji, tagline, venue, email) and the `signup` settings even when live.
+- `signups.js` stores season sign-ups (teams and free agents) in `signups.json` under the Railway volume
+  (`RAILWAY_VOLUME_MOUNT_PATH`) or `DATA_DIR`, else `.data/` (lost on redeploy). Public: `POST /api/signups`,
+  `GET /api/signups/summary` (counts only). Private: `GET /api/signups` with header `x-passcode` = `SIGNUP_PASSCODE`;
+  the organisers' page is `/#signups` (not linked anywhere). Contact details must never appear on a public page.
 
 ## Design (settled with the owner after several rounds)
 

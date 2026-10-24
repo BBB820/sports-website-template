@@ -28,6 +28,25 @@ Settings, in Railway under the service's **Variables**:
 
 Playoffs come through too: the bracket, series results, champion and Finals MVP, plus Season MVP (best efficiency per game) and Defensive Player (most steals plus blocks per game). Playoff games are kept out of standings and season stats, as Hooperville does. The league's name, and its logo and team logos when Hooperville has them, come from Hooperville. The colour, tagline, venue and email come from `data.js`.
 
+## Season sign-ups
+
+When `signup.open` is true in `data.js`, the site shows a **Sign-ups are open** band on Home and a **Sign up** page:
+captains register a team (name, colour, captain, mobile, email, 5–15 players) and players without a team sign up
+as free agents (position, height, level). Each gets a reference code. Duplicate team names are refused, and
+there is a bot trap and a limit of 5 sign-ups per connection every 10 minutes.
+
+Sign-ups are saved in `signups.json` on the server and are **never shown publicly**. Organisers open
+`/#signups`, enter the passcode, see every team and free agent, tap a number to call, and download a spreadsheet.
+
+Two settings on Railway (service → **Variables**, and service → **Volume**):
+
+| Setting | Why |
+|---|---|
+| `SIGNUP_PASSCODE` variable | The passcode for `/#signups`. Without it the list stays locked. |
+| A **Volume** on the service | Keeps sign-ups when the site redeploys. Railway sets `RAILWAY_VOLUME_MOUNT_PATH` and the site uses it. Without one, sign-ups are lost on every deploy, and the admin page warns about it. |
+
+To close sign-ups, set `open: false`. To start the following season, change `season`, `starts` and `deadline`.
+
 ## Make it yours
 
 Without Hooperville, everything is in `data.js`. With Hooperville connected, only `league` (the branding) is read from it:

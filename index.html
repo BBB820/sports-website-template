@@ -23,6 +23,7 @@
         <a href="#playoffs" hidden>Playoffs</a>
         <a href="#teams">Teams</a>
         <a href="#news">News</a>
+        <a href="#signup" class="nav-cta" hidden>Sign up</a>
       </nav>
       <button class="theme" type="button" aria-label="Switch light or dark">◐</button>
     </div>
@@ -48,6 +49,7 @@
     <a href="#teams">Teams</a>
     <a href="#playoffs" hidden>Playoffs</a>
     <a href="#news">News</a>
+    <a href="#signup" class="sheet-cta" hidden>Sign up for next season</a>
     <button type="button" class="sheet-theme">Light / dark</button>
   </div>
 
@@ -65,7 +67,8 @@
           window.SITE = {
             ...live,
             league: { ...sample.league, ...Object.fromEntries(Object.entries(live.league).filter(([, v]) => v)) },
-            news: []
+            news: [],
+            signup: sample.signup
           };
         }
       } catch { /* offline or no server: keep the sample */ }

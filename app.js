@@ -285,6 +285,125 @@
       ${item("Defensive player", "🛡️", dpoy, dpoy ? ((dpoy.t.stl + dpoy.t.blk) / dpoy.gp).toFixed(1) + " STL+BLK" : "")}</div>`;
   }
 
+  // ---------- season sign-ups ----------
+  const SU = S.signup && S.signup.open ? S.signup : null;
+  const deadline = SU && SU.deadline ? dfmt(SU.deadline + "T12:00", { weekday: "short", month: "long", day: "numeric" }) : "";
+  const POS = ["PG", "SG", "SF", "PF", "C"];
+  function signupBand() {
+    if (!SU) return "";
+    return `<section class="card su-band">
+      <div><span class="label">${esc(SU.season)}${SU.starts ? ` · starts ${esc(SU.starts)}` : ""}</span>
+        <h2>Sign-ups are open</h2>
+        <p>${esc(SU.note || "")}${deadline ? ` Register by ${esc(deadline)}.` : ""}</p></div>
+      <div class="su-actions"><a class="btn" href="#signup/team">Register a team</a><a class="btn ghost" href="#signup/player">Join as a free agent</a></div>
+    </section>`;
+  }
+  const field = (name, label, attrs = "", hint = "") => `<label class="fld"><span>${label}</span><input name="${name}" ${attrs}>${hint ? `<small>${hint}</small>` : ""}</label>`;
+  const select = (name, label, options, hint = "") => `<label class="fld"><span>${label}</span><select name="${name}">${options.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>${hint ? `<small>${hint}</small>` : ""}</label>`;
+  const consent = `<label class="check"><input type="checkbox" name="agree" required> <span>The league may contact me about ${esc(SU ? SU.season : "the season")} by phone or email. My details are only seen by the organisers.</span></label>
+    <input class="trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">`;
+  function teamForm() {
+    return `<form class="card su-form" data-signup="team" novalidate>
+      <h3>Team</h3>
+      <div class="fld-row">${field("teamName", "Team name", 'required maxlength="40" autocomplete="off"')}
+        <label class="fld fld-color"><span>Team colour</span><input type="color" name="color" value="#ff6f00"></label></div>
+      <h3>Captain</h3>
+      ${field("captain", "Captain's name", 'required maxlength="60" autocomplete="name"')}
+      <div class="fld-row">${field("phone", "Mobile number", 'required inputmode="tel" autocomplete="tel" placeholder="0917 123 4567"')}${field("email", "Email (optional)", 'type="email" autocomplete="email"')}</div>
+      <h3>Roster <small class="soft">at least 5, up to 15</small></h3>
+      <div class="roster-rows">${Array.from({ length: 15 }, (_, i) => `<div class="rr${i >= 8 ? " extra" : ""}"><span class="rr-n">${i + 1}</span>
+        <input name="p${i}name" placeholder="Player name" maxlength="60" aria-label="Player ${i + 1} name">
+        <input name="p${i}no" placeholder="#" inputmode="numeric" maxlength="2" aria-label="Player ${i + 1} jersey number">
+        <select name="p${i}pos" aria-label="Player ${i + 1} position"><option value="">Pos</option>${POS.map((x) => `<option>${x}</option>`).join("")}</select></div>`).join("")}</div>
+      <button type="button" class="link more-rows" data-more-rows>+ More players</button>
+      <label class="fld"><span>Anything else? (optional)</span><textarea name="notes" maxlength="500" rows="3"></textarea></label>
+      ${consent}
+      <p class="form-error" role="alert" hidden></p>
+      <button class="btn" type="submit">Register team</button>
+    </form>`;
+  }
+  function playerForm() {
+    return `<form class="card su-form" data-signup="player" novalidate>
+      <h3>About you</h3>
+      ${field("name", "Full name", 'required maxlength="60" autocomplete="name"')}
+      <div class="fld-row">${field("phone", "Mobile number", 'required inputmode="tel" autocomplete="tel" placeholder="0917 123 4567"')}${field("email", "Email (optional)", 'type="email" autocomplete="email"')}</div>
+      <div class="fld-row">${select("position", "Position", [["Any", "Any"], ...POS.map((x) => [x, x])])}${field("height", "Height in cm (optional)", 'inputmode="numeric" maxlength="3" placeholder="178"')}</div>
+      ${select("level", "Playing level", [["", "Choose one"], ["Beginner", "Beginner"], ["Casual", "Casual"], ["Competitive", "Competitive"], ["Former varsity / pro", "Former varsity / pro"]])}
+      <label class="fld"><span>Anything else? (optional)</span><textarea name="notes" maxlength="500" rows="3" placeholder="Days you can play, friends you want to team up with…"></textarea></label>
+      ${consent}
+      <p class="form-error" role="alert" hidden></p>
+      <button class="btn" type="submit">Sign up as a free agent</button>
+    </form>`;
+  }
+  async function sendSignup(form) {
+    const kind = form.dataset.signup, f = new FormData(form), err = form.querySelector(".form-error"), btn = form.querySelector('[type="submit"]');
+    const body = { kind, season: SU.season, agree: form.agree.checked, website: f.get("website") || "", email: f.get("email") || "", phone: f.get("phone") || "", notes: f.get("notes") || "" };
+    if (kind === "team") {
+      Object.assign(body, { teamName: f.get("teamName") || "", color: f.get("color") || "", captain: f.get("captain") || "",
+        players: Array.from({ length: 15 }, (_, i) => ({ name: f.get(`p${i}name`) || "", no: f.get(`p${i}no`) || "", pos: f.get(`p${i}pos`) || "" })) });
+    } else Object.assign(body, { name: f.get("name") || "", position: f.get("position"), height: f.get("height") || "", level: f.get("level") || "" });
+    err.hidden = true; btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const res = await fetch("/api/signups", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "Sign-ups only work on the live website.");
+      form.outerHTML = `<div class="card su-done"><span class="su-check" aria-hidden="true">✓</span><h3>${kind === "team" ? "Team registered" : "You're signed up"}</h3>
+        <p>Thanks${kind === "team" ? ", " + esc(body.captain.split(" ")[0]) : ", " + esc(body.name.split(" ")[0])}! The league will contact you on ${esc(body.phone)}${deadline ? ` after sign-ups close on ${esc(deadline)}` : ""}.</p>
+        <p class="label">Reference ${esc(out.id)}</p><a class="btn ghost" href="#home">Back to home</a></div>`;
+      window.scrollTo(0, 0);
+    } catch (e) {
+      err.textContent = e.message; err.hidden = false; btn.disabled = false; btn.textContent = kind === "team" ? "Register team" : "Sign up as a free agent";
+    }
+  }
+
+  // The organisers' list. The passcode stays in this browser tab only.
+  const memo = { get() { try { return sessionStorage.getItem("cbc:su") || ""; } catch { return ""; } }, set(v) { try { sessionStorage.setItem("cbc:su", v); } catch { /* private mode */ } } };
+  async function loadSignups(passcode) {
+    const box = document.getElementById("su-admin");
+    box.innerHTML = `<p class="card empty">Loading…</p>`;
+    try {
+      const res = await fetch("/api/signups", { headers: { "x-passcode": passcode } });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "Could not load sign-ups");
+      memo.set(passcode);
+      box.innerHTML = signupsView(out);
+    } catch (e) {
+      box.innerHTML = passForm(e.message);
+    }
+  }
+  const passForm = (msg = "") => `<form class="card su-form narrow-form" data-passcode><h3>Organisers only</h3>
+    ${field("passcode", "Passcode", 'type="password" required autocomplete="current-password"')}
+    ${msg ? `<p class="form-error" role="alert">${esc(msg)}</p>` : ""}<button class="btn" type="submit">Open</button></form>`;
+  let lastList = [];
+  function signupsView({ persistent, signups }) {
+    lastList = signups;
+    const seasons = [...new Set(signups.map((x) => x.season))];
+    const teams = signups.filter((x) => x.kind === "team"), players = signups.filter((x) => x.kind === "player");
+    const when = (iso) => dfmt(iso, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    return `${persistent ? "" : `<p class="card warn">Sign-ups are not on a storage disk yet, so they are lost whenever the website redeploys. Add a Volume to the service on Railway.</p>`}
+      <div class="su-stats"><div class="card"><b class="num">${teams.length}</b><span class="label">Teams</span></div><div class="card"><b class="num">${players.length}</b><span class="label">Free agents</span></div>
+        <button class="btn ghost" type="button" data-csv>Download spreadsheet</button></div>
+      ${seasons.length > 1 ? `<p class="note">Seasons: ${seasons.map(esc).join(", ")}</p>` : ""}
+      <section>${sh("Teams")}<div class="card scroll"><table><thead><tr><th class="l sticky">Team</th><th class="l">Captain</th><th class="l">Mobile</th><th class="l">Email</th><th>Players</th><th class="l">Signed up</th><th>Ref</th></tr></thead>
+        <tbody>${teams.map((x) => `<tr><td class="l sticky"><span class="tc"><span class="logo sm" style="--c:${esc(x.color || "#888")}"></span><b>${esc(x.teamName)}</b></span></td><td class="l">${esc(x.captain)}</td><td class="l"><a href="tel:${esc(x.phone.replace(/[^\d+]/g, ""))}">${esc(x.phone)}</a></td><td class="l">${esc(x.email || "–")}</td>
+          <td><details><summary>${x.players.length}</summary><ol class="mini-roster">${x.players.map((p) => `<li>${p.no ? `#${esc(p.no)} ` : ""}${esc(p.name)}${p.pos ? ` · ${esc(p.pos)}` : ""}</li>`).join("")}</ol></details></td>
+          <td class="l">${esc(when(x.createdAt))}</td><td>${esc(x.id)}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No teams yet.</td></tr>`}</tbody></table></div></section>
+      <section>${sh("Free agents")}<div class="card scroll"><table><thead><tr><th class="l sticky">Name</th><th>Pos</th><th>Ht</th><th class="l">Level</th><th class="l">Mobile</th><th class="l">Email</th><th class="l">Notes</th><th>Ref</th></tr></thead>
+        <tbody>${players.map((x) => `<tr><td class="l sticky">${esc(x.name)}</td><td>${esc(x.position)}</td><td>${x.height || "–"}</td><td class="l">${esc(x.level || "–")}</td><td class="l"><a href="tel:${esc(x.phone.replace(/[^\d+]/g, ""))}">${esc(x.phone)}</a></td><td class="l">${esc(x.email || "–")}</td><td class="l note-cell">${esc(x.notes || "")}</td><td>${esc(x.id)}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No free agents yet.</td></tr>`}</tbody></table></div></section>`;
+  }
+  function downloadCsv() {
+    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["Ref", "Type", "Season", "Signed up", "Team / Name", "Captain", "Mobile", "Email", "Position", "Height", "Level", "Players", "Notes"]];
+    for (const x of lastList) rows.push([x.id, x.kind === "team" ? "Team" : "Free agent", x.season, x.createdAt, x.teamName || x.name, x.captain || "", x.phone, x.email, x.position || "", x.height || "", x.level || "",
+      (x.players || []).map((p) => `${p.no ? "#" + p.no + " " : ""}${p.name}${p.pos ? " (" + p.pos + ")" : ""}`).join("; "), x.notes]);
+    const blob = new Blob(["\ufeff" + rows.map((r) => r.map(q).join(",")).join("\r\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `cubao-signups-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   // ---------- pages ----------
   const pages = {
     home() {
@@ -320,6 +439,7 @@
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
           ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}
         </section>
+        ${signupBand()}
         ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
           <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
@@ -424,6 +544,22 @@
         ${PO.champion ? `<section>${sh("Season awards")}${awards()}</section>` : ""}
         ${pgames.length ? `<section>${sh("Playoff games")}<div class="games-grid">${pgames.map(gameCard).join("")}</div></section>` : ""}
       </div>`;
+    },
+
+    signup(tab) {
+      if (!SU) return head(L.name, "Sign up") + `<p class="card empty">Sign-ups for the next season are closed. Check back soon.</p>`;
+      const which = tab === "player" ? "player" : "team";
+      return head(`${SU.season}${SU.starts ? " · starts " + SU.starts : ""}`, "Sign up") + `<div class="stack su-page">
+        <p class="sub">${esc(SU.note || "")}${deadline ? ` Sign-ups close ${esc(deadline)}.` : ""}${SU.fee ? ` Fee: ${esc(SU.fee)}.` : ""}</p>
+        ${seg([["team", "Register a team", "#signup/team"], ["player", "Free agent", "#signup/player"]], which)}
+        <p class="note">${which === "team" ? "Captains: register your whole team. You can change the roster later with the league." : "No team? Sign up and the league will place you on one."}</p>
+        ${which === "team" ? teamForm() : playerForm()}
+      </div>`;
+    },
+
+    signups() {
+      setTimeout(() => { const p = memo.get(); if (p) loadSignups(p); }, 0);
+      return head(SU ? SU.season : L.name, "Sign-ups") + `<div class="stack" id="su-admin">${memo.get() ? `<p class="card empty">Loading…</p>` : passForm()}</div>`;
     },
 
     news() {
@@ -562,7 +698,7 @@
   }
 
   // ---------- routing ----------
-  const NAV = { game: "games", team: "teams", player: "teams" };
+  const NAV = { game: "games", team: "teams", player: "teams", signups: "signup" };
   function route() {
     const [page, arg] = decodeURIComponent((location.hash || "#home").slice(1)).split("/");
     const render = pages[page] || pages.home;
@@ -604,6 +740,15 @@
     if (ttab) { store.set("teamTab", ttab.dataset.teamtab); route(); return; }
     if (e.target.closest("[data-back]")) { history.length > 1 ? history.back() : (location.hash = "#home"); }
   });
+  document.addEventListener("submit", (e) => {
+    const f = e.target;
+    if (f.matches("[data-signup]")) { e.preventDefault(); if (f.reportValidity()) sendSignup(f); }
+    if (f.matches("[data-passcode]")) { e.preventDefault(); loadSignups(f.passcode.value); }
+  });
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-more-rows]")) { document.querySelectorAll(".rr.extra").forEach((r) => r.classList.remove("extra")); e.target.remove(); }
+    if (e.target.closest("[data-csv]")) downloadCsv();
+  });
   document.addEventListener("change", (e) => {
     if (e.target.matches("[data-filter]")) { store.set("teamFilter", e.target.value); route(); }
   });
@@ -613,10 +758,11 @@
   // ---------- masthead & footer ----------
   document.getElementById("ticker").innerHTML = ticker();
   if (PO) document.querySelectorAll('a[href="#playoffs"]').forEach((a) => (a.hidden = false));
+  if (SU) document.querySelectorAll('a[href="#signup"]').forEach((a) => (a.hidden = false));
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
-    : `<span class="src">Sample data · live stats appear once the league is on Hooperville</span>`;
+    : `<span class="src">Sample data · live stats appear once the league is on hoopr.id</span>`;
   document.getElementById("footer").innerHTML = `<div class="in"><span>${esc(L.name)} · ${esc(L.venue)} · Since ${esc(L.founded)}</span>${src}<a href="mailto:${esc(L.email)}">${esc(L.email)}</a></div>`;
 
   const saved = store.get("theme", null);

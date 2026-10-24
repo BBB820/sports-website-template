@@ -14,6 +14,16 @@ window.SITE = {
     email: "cubaoballerclub@example.com"
   },
 
+  // Sign-ups for the next season. Set open: false to close them. Leave fee empty to hide it.
+  signup: {
+    open: true,
+    season: "Season 2027",
+    starts: "January 2027",
+    deadline: "2026-12-13",
+    fee: "",
+    note: "Games every Saturday night at Cubao Covered Court."
+  },
+
   // Every team: three-letter code, colour, logo emoji, and roster (captain first).
   // Players: number, name, position, height in cm. The first five listed are the starters.
   teams: {
