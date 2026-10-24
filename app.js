@@ -251,6 +251,88 @@
       <div class="np-top"><span class="label">${esc(day(g.date))} · ${esc(time(g.date))}</span><span class="label">Preview →</span></div></a>`;
   }
 
+  // ---------- home banner: a slideshow ----------
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  // Slides after the first: the closest game of the last round, the scoring leader, first place and the latest league post.
+  function heroSlides(lastRound) {
+    const out = [];
+    const close = [...lastRound].sort((a, b) => Math.abs(a.score[0] - a.score[1]) - Math.abs(b.score[0] - b.score[1]))[0];
+    if (close) {
+      const w = winner(close), l = opp(close, w);
+      const all = [close.home, close.away].flatMap((t) => boxScore(close, t).map((x) => ({ ...x, team: t })));
+      const star = (close.potg && all.find((x) => x.key === close.potg)) || [...all].sort((a, b) => eff(b) - eff(a))[0];
+      const side = (t, i) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small class="num${close.score[i] < close.score[1 - i] ? " lose" : ""}">${close.score[i]}</small></div>`;
+      const [w1, ...wr] = w.split(" ");
+      out.push({ c: TEAMS[w].color, body: `<div class="hero-copy"><span class="label">${esc(stageOf(close))} · Closest finish</span>
+        <h2 class="big">${esc(w1)} <span>${esc(wr.join(" "))}</span></h2>
+        <p class="meta">Beat ${esc(l)} by ${Math.abs(close.score[0] - close.score[1])}.${star ? ` <b>${esc(star.name)}</b> (${esc(short(star.team))}) had ${plural(star.pts, "point")}, ${plural(star.reb, "rebound")} and ${plural(star.ast, "assist")}.` : ""}</p></div>
+        <a class="nextpanel" href="#game/${close.id}"><div class="np-top"><span class="label">Final · ${esc(day(close.date))}</span></div>
+          <div class="np-vs score">${side(close.home, 0)}<span class="at">–</span>${side(close.away, 1)}</div>
+          <div class="np-top"><span class="label">${esc(L.venue)}</span><span class="label">Box score →</span></div></a>` });
+    }
+    const s = leadersIn("pts", 1)[0];
+    if (s) {
+      const [f, last] = nameParts(s.p.name);
+      out.push({ c: TEAMS[s.p.team].color, body: `<div class="hero-copy"><span class="label">League leader · Points</span>
+        <h2 class="big">${esc(f)} <span>${esc(last)}</span></h2>
+        <p class="meta">${esc(s.p.team)} · #${esc(s.p.no)}${s.p.pos ? " · " + esc(s.p.pos) : ""}</p>
+        <dl class="hero-stats">${[["PPG", "pts"], ["RPG", "reb"], ["APG", "ast"], ["EFF", "eff"]].map(([l, k]) => `<div><dt>${l}</dt><dd class="num">${avg(s.t[k], s.gp)}</dd></div>`).join("")}</dl><a class="hero-link phone-only" href="${plink(s.p)}">Player page →</a></div>
+        <a class="nextpanel who side-only" href="${plink(s.p)}"><span class="jersey-big num" style="--c:${esc(TEAMS[s.p.team].color)}">${esc(s.p.no)}</span>
+          <div class="np-top"><span class="label">${esc(s.gp)} games</span><span class="label">Player page →</span></div></a>` });
+    }
+    if (played.length) {
+      const top = TABLE[0], [t1, ...tr] = top.team.split(" ");
+      const row = (r) => `<div class="mini-row">${`<span class="label">${r.rank}</span>`}${logo(r.team)}<b>${esc(short(r.team))}</b><span class="num">${r.w}-${r.l}</span></div>`;
+      out.push({ c: TEAMS[top.team].color, body: `<div class="hero-copy"><span class="label">Standings · First place</span>
+        <h2 class="big">${esc(t1)} <span>${esc(tr.join(" "))}</span></h2>
+        <p class="meta">${[top.streak && `${top.streak[0] === "W" ? "Won" : "Lost"} ${top.streak.slice(1)} straight`, TABLE[1] && (TABLE[1].gb ? `${plural(TABLE[1].gb, "game")} clear of ${esc(TABLE[1].team)}` : `level with ${esc(TABLE[1].team)}`)].filter(Boolean).join(" · ")}</p>
+        <dl class="hero-stats"><div><dt>Record</dt><dd class="num">${top.w}-${top.l}</dd></div><div><dt>PPG</dt><dd class="num">${top.ppg.toFixed(1)}</dd></div><div><dt>OPPG</dt><dd class="num">${top.oppg.toFixed(1)}</dd></div><div><dt>Last 5</dt><dd class="num">${top.last5.filter((x) => x === "W").length}-${top.last5.filter((x) => x === "L").length}</dd></div></dl><a class="hero-link phone-only" href="#standings">Standings →</a></div>
+        <a class="nextpanel side-only" href="#standings"><div class="np-top"><span class="label">Top of the table</span></div>
+          <div class="ministand">${TABLE.slice(0, 4).map(row).join("")}</div>
+          <div class="np-top"><span class="label">${esc(L.season)}</span><span class="label">Standings →</span></div></a>` });
+    }
+    const post = S.news.find((n) => !recapGame(n));
+    if (post) out.push({ c: L.color, body: `<div class="hero-copy"><span class="label">${esc(post.tag)} · ${esc(day(post.date))}</span>
+        <h2 class="big long">${esc(post.title)}</h2>
+        <p class="meta">${esc(post.body)}</p>
+        <a class="hero-link" href="#news">All news →</a></div>${logo(null, "xl")}` });
+    return out;
+  }
+
+  // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
+  function hero(slides) {
+    const photos = (L.photos || []).filter(Boolean);
+    const bg = (i) => photos.length ? ` photo" style="--team:${esc(slides[i].c)};--photo:url('${esc(encodeURI(photos[i % photos.length]).replace(/'/g, "%27"))}')` : `" style="--team:${esc(slides[i].c)}`;
+    const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
+      ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
+      <button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></div>`;
+    return `<section class="hero band" aria-roledescription="carousel" aria-label="Highlights">
+      <div class="hero-track">${slides.map((x, i) => `<div class="top slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.body}</div>`).join("")}</div>
+      ${nav}</section>`;
+  }
+
+  // Moves on every 6 seconds; waits while the pointer is over it, and stops once someone swipes or taps the arrows.
+  let heroTimer = null;
+  function startHero() {
+    clearInterval(heroTimer);
+    const el = app.querySelector(".hero");
+    const track = el && el.querySelector(".hero-track");
+    if (!track || track.children.length < 2) return;
+    const n = track.children.length, dots = [...el.querySelectorAll(".hero-dot")];
+    const at = () => Math.round(track.scrollLeft / track.clientWidth);
+    track.addEventListener("scroll", () => dots.forEach((d, k) => d.setAttribute("aria-current", String(k === at()))), { passive: true });
+    let hover = false, stopped = false;
+    el.go = (i) => track.scrollTo({ left: ((i + n) % n) * track.clientWidth, behavior: "smooth" });
+    el.stop = () => (stopped = true);
+    el.addEventListener("mouseenter", () => (hover = true));
+    el.addEventListener("mouseleave", () => (hover = false));
+    el.addEventListener("focusin", () => (hover = true));
+    el.addEventListener("focusout", () => (hover = false));
+    track.addEventListener("touchstart", el.stop, { passive: true });
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+      heroTimer = setInterval(() => { if (!hover && !stopped && !document.hidden) el.go(at() + 1); }, 6000);
+  }
+
   // ---------- playoffs & awards ----------
   const playerByKey = (key) => PLAYERS.find((p) => p.key === key);
   function championPanel() {
@@ -432,13 +514,14 @@
           <span class="ltile-val num">${avg(s.t[key], s.gp)}<small>${unit}</small></span>
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
-      return `<section class="top band">
-          <div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
+      return `${hero([
+          { c: L.color, body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
             <p class="meta">${esc(L.tagline)}</p>
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
-          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}
-        </section>
+          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}` },
+          ...heroSlides(lastRound)
+        ])}
         ${signupBand()}
         ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
@@ -703,6 +786,7 @@
     const [page, arg] = decodeURIComponent((location.hash || "#home").slice(1)).split("/");
     const render = pages[page] || pages.home;
     app.innerHTML = render(arg);
+    startHero();
     const navKey = NAV[page] || (pages[page] ? page : "home");
     document.querySelectorAll(".nav a, .sheet a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === "#" + navKey ? "page" : "false"));
     const tab = ["home", "games", "standings", "stats"].includes(navKey) ? navKey : "more";
@@ -730,6 +814,9 @@
   document.addEventListener("click", (e) => { if (sheet && !sheet.hidden && !e.target.closest(".sheet")) closeSheet(); });
 
   document.addEventListener("click", (e) => {
+    const step = e.target.closest("[data-hero], [data-hero-dot]");
+    if (step) { const h = step.closest(".hero"), track = h.querySelector(".hero-track"); h.stop();
+      h.go(step.dataset.heroDot != null ? +step.dataset.heroDot : Math.round(track.scrollLeft / track.clientWidth) + +step.dataset.hero); return; }
     const go = e.target.closest("[data-go]");
     if (go) { location.hash = go.dataset.go; return; }
     const sort = e.target.closest("[data-sort]");

@@ -1,4 +1,4 @@
-/* Cubao Baller Club league site. Modern NBA feel: black masthead with a slim score strip,
+/* Cubao Ballers Club league site. Modern NBA feel: black masthead with a slim score strip,
    team-colour banners, condensed capitals for headlines and numbers, and plenty of room.
    Light is the default; dark follows the device or the ◐ button. */
 :root {
@@ -104,8 +104,8 @@ a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32
 @media (min-width: 900px) { .top.band { grid-template-columns: 1fr auto; } }
 .top .watermark { display: none; }
 .top .label { color: rgb(255 255 255 / .82); }
-.top h1 { font-size: clamp(3rem, 8vw, 6rem); line-height: .88; margin-top: 10px; }
-.top h1 span { color: #111; }
+.top h1, .slide .big { font-size: clamp(3rem, 8vw, 6rem); line-height: .88; margin-top: 10px; }
+.top h1 span, .slide .big span { color: #111; }
 .top .meta { margin-top: 16px; max-width: 46ch; font-size: 1.1rem; opacity: .92; }
 .top .meta b { font-weight: 700; }
 .hero-stats { display: flex; flex-wrap: wrap; gap: 0; margin-top: 36px; }
@@ -126,6 +126,36 @@ a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32
 .np-vs .side small { font-family: var(--display); font-weight: 600; opacity: .72; }
 .np-vs .at { font-family: var(--display); font-weight: 800; font-size: 1.5rem; opacity: .8; }
 .count { font-family: var(--display); font-weight: 700; font-size: .82rem; letter-spacing: .06em; background: var(--raise); color: var(--ink); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+
+/* ── home banner slideshow: each slide is a full-width team-colour banner ── */
+.hero.band { padding: 0; overflow: hidden; }
+.hero-track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+.hero-track::-webkit-scrollbar { display: none; }
+.slide { scroll-snap-align: start; scroll-snap-stop: always; color: #fff; display: grid; gap: 40px; align-items: center; align-content: center;
+  padding: 64px max(var(--gutter), calc(50vw - 584px + var(--gutter))) 84px;
+  background: var(--court) right -120px center / auto 130% no-repeat, var(--depth); }
+.slide.photo { background: linear-gradient(90deg, rgb(0 0 0 / .8), rgb(0 0 0 / .45) 60%, rgb(0 0 0 / .25)), var(--photo) center / cover no-repeat, var(--depth); }
+.slide.photo .big span, .slide.photo h1 span { color: var(--team); }
+@media (min-width: 900px) { .slide { grid-template-columns: 1fr auto; } .slide .nextpanel { width: 380px; } }
+.slide .big.long { font-size: clamp(2.4rem, 5.5vw, 4.2rem); line-height: .95; max-width: 16ch; }
+.hero-link.phone-only { display: none; }
+.hero-link { display: inline-block; margin-top: 24px; font-family: var(--display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: #fff; color: #000; padding: 10px 20px; border-radius: 999px; }
+.np-vs.score .side small { font-size: 2.6rem; line-height: 1; opacity: 1; font-weight: 800; }
+.np-vs.score .side small.lose { opacity: .55; }
+.who { justify-items: center; }
+.jersey-big { display: grid; place-items: center; width: 150px; height: 150px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px rgb(255 255 255 / .9); font-size: 4.6rem; line-height: 1; }
+.who .np-top { width: 100%; }
+.ministand { display: grid; gap: 2px; }
+.mini-row { display: grid; grid-template-columns: 18px auto 1fr auto; align-items: center; gap: 10px; padding: 8px 4px; border-top: 1px solid rgb(255 255 255 / .14); }
+.mini-row:first-child { border-top: 0; }
+.mini-row b, .mini-row .num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: .04em; }
+.hero-nav { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; justify-content: center; align-items: center; gap: 4px; pointer-events: none; }
+.hero-nav button { pointer-events: auto; border: 0; background: none; padding: 0; }
+.hero-dot { width: 26px; height: 26px; display: grid; place-items: center; }
+.hero-dot::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgb(255 255 255 / .5); transition: width .25s, background .25s; }
+.hero-dot[aria-current="true"]::before { width: 26px; background: #fff; }
+.hero-arrow { width: 34px; height: 34px; border-radius: 50%; color: #fff; font-size: 1.5rem; line-height: 1; background: rgb(0 0 0 / .3) !important; margin: 0 8px; }
+.hero-arrow:hover { background: rgb(0 0 0 / .55) !important; }
 
 /* Floating number card that overlaps the bottom of a banner. */
 .scoreboard { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-top: -160px; position: relative; z-index: 1; }
@@ -336,6 +366,13 @@ main > .back:first-child { margin-top: 40px; }
   main > :first-child:not(.band) { margin-top: 32px; }
   .top.band { padding-top: 40px; padding-bottom: 44px; gap: 28px; background-position: center; }
   .top .logo.xl { display: none; }
+  .slide { padding: 40px var(--gutter) 64px; gap: 28px; background-position: center; }
+  .slide .nextpanel { max-width: none; }
+  .jersey-big { width: 104px; height: 104px; font-size: 3.2rem; }
+  .hero-arrow { display: none; }
+  .slide .side-only { display: none; }
+  .hero-link.phone-only { display: inline-block; }
+  .hero-nav { bottom: 16px; }
   .hero-stats { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px 0; }
   .hero-stats div { padding: 0 0 0 16px; }
   .hero-stats div:nth-child(odd) { padding-left: 0; border-left: 0; }

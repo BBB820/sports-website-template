@@ -11,7 +11,10 @@ window.SITE = {
     city: "Quezon City",
     venue: "Cubao Covered Court",
     founded: 2024,
-    email: "cubaoballerclub@example.com"
+    email: "cubaoballerclub@example.com",
+    // Photos behind the Home banner slides, one per slide in turn. Put the files in a "photos" folder,
+    // e.g. photos: ["photos/finals.jpg", "photos/team.jpg"]. Leave empty for plain team colours.
+    photos: []
   },
 
   // Sign-ups for the next season. Set open: false to close them. Leave fee empty to hide it.

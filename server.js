@@ -10,7 +10,7 @@ const signups = require("./signups.js");
 const root = __dirname;
 const types = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp"
+  ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp"
 };
 const hidden = new Set(["server.js", "hooperville.js", "signups.js", "package.json", "railway.json", "CLAUDE.md", "README.md"]);
 

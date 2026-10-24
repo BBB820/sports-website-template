@@ -38,7 +38,9 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 
 NBA.com-style league site, modern and roomy: black masthead with a slim score strip, team-colour banners
 with faint court lines, Barlow Condensed capitals for headlines and numbers, rounded cards with soft
-shadows, pill tabs. Home has five blocks: hero (key numbers + Game of the Week or the champion), this
+shadows, pill tabs. Home has five blocks: a hero slideshow (league + key numbers + Game of the Week or the champion; then the
+closest finish of the last round, the scoring leader, first place, the latest league post; auto-advances every 6s,
+photos from `league.photos` in `data.js` go behind the slides), this
 week's games, standings beside last week's results, league leader tiles, news. On phones a bottom tab bar
 (Home, Games, Standings, Stats, More) replaces the top menu, Home rows swipe sideways, and table name
 columns stay pinned. The owner rejected both a busier version and a plainer one; keep to this middle.

@@ -2,7 +2,7 @@
 
 The website for the Cubao Baller Club basketball league, in an NBA.com style: black masthead with a score strip, team-colour banners, tall condensed capitals. Light mode is NBA.com, dark mode is the NBA app.
 
-- **Home**: league banner with Game of the Week, league numbers, last week's scores, this week's games, league leaders, standings, teams, news
+- **Home**: a sliding banner (the league and Game of the Week, last week's closest game, the scoring leader, first place, the latest news; add photos with `photos` in `data.js`), league numbers, last week's scores, this week's games, league leaders, standings, teams, news
 - **Games**: every game by week, upcoming and results
 - **Game page**: scoreboard split between the two team colours, score by quarter; Summary (player of the game, game leaders, team stats) and both teams' box scores. A game not yet played shows tale of the tape, players to watch, form and head to head.
 - **Standings**: W, L, PCT, GB, PPG, OPPG, last five, streak, and the playoff line
