@@ -25,7 +25,7 @@ window.SITE = {
 
   // Sign-ups for the next season. Set open: false to close them. Leave fee empty to hide it.
   signup: {
-    open: true,
+    open: false,
     season: "Season 2027",
     starts: "January 2027",
     deadline: "2026-12-13",

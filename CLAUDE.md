@@ -28,7 +28,7 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 - `app.js` renders every page with hash routing: home, games, standings, stats, playoffs, teams, team/CODE,
   player/CODE-username, game/ID, news. Sample games without a box score get generated box scores that add
   up to the real final score (seeded, so stable). Playoff games are kept out of standings and season stats.
-- `data.js` supplies branding (colour, logo emoji, tagline, venue, email) and the `signup` settings even when live.
+- `data.js` supplies branding (colour, logo emoji, tagline, venue, email) and the `signup` settings even when live (sign-ups are closed: `signup.open: false` hides the band, menu links and form).
   Also pictures: `league.photos` (banner slides and news) and `league.championPhoto` (first slide once there is a
   champion, with CSS confetti), empty until real photos are added to `photos/` (outside image
   hosts are blocked in the sandbox and in the preview, so keep pictures in the repo); `pictures.teams` / `pictures.players`

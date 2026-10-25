@@ -9,7 +9,8 @@
     standings: ["🏆", "First place", "The team on top, with the top four"],
     news: ["📰", "Latest story", "Your newest article, or the newest league post"]
   };
-  const LINKS = [["none", "No link"], ["article", "An article"], ["album", "A photo album"], ["game", "A game (box score)"], ["team", "A team"], ["player", "A player"], ["signup", "The sign-up page"], ["url", "A web address"]];
+  const LINKS = [["none", "No link"], ["article", "An article"], ["album", "A photo album"], ["game", "A game (box score)"], ["team", "A team"], ["player", "A player"], ["signup", "The sign-up page"], ["url", "A web address"]]
+    .filter(([v]) => v !== "signup" || (S.signup && S.signup.open));
   const DEFAULT_BUTTON = { article: "Read story", album: "See photos", game: "Box score", team: "Team page", player: "Player page", signup: "Sign up", url: "Learn more" };
 
   let doc = null, persistent = true, tab = "slides", editing = null, note = "";
