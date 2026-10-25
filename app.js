@@ -232,17 +232,41 @@
     });
   }
 
+  // The organisers' content (slides, articles, albums), read fresh so the editor's saves show at once.
+  const C = () => S.content || { slides: [], articles: [], albums: [] };
+  const gameKey = (g) => g.date + "|" + g.home;
+  const gameByKey = (k) => k && ALL.find((g) => gameKey(g) === k);
+  const articleById = (aid) => C().articles.find((a) => a.id === aid);
+  const albumById = (aid) => C().albums.find((a) => a.id === aid);
+  // Articles first by date, then the league's posts and automatic recaps.
+  const newsItems = () => [...C().articles.map((a) => ({ article: a.id, date: a.date, tag: a.tag || "News", title: a.title, body: a.summary, photo: a.image, focus: a.focus, gameRef: a.game })), ...S.news]
+    .sort((a, b) => b.date.localeCompare(a.date));
+  // Where a slide's link goes, and the button words it gets unless the organisers wrote their own.
+  function linkOf(l) {
+    const t = l && l.target, none = { href: "", label: "", ext: "" };
+    switch (l && l.type) {
+      case "article": return articleById(t) ? { href: `#article/${t}`, label: "Read story", ext: "" } : none;
+      case "album": return albumById(t) ? { href: `#album/${t}`, label: "See photos", ext: "" } : none;
+      case "game": { const g = gameByKey(t); return g ? { href: `#game/${g.id}`, label: g.played ? "Box score" : "Game preview", ext: "" } : none; }
+      case "team": return TEAMS[t] ? { href: tlink(t), label: "Team page", ext: "" } : none;
+      case "player": return playerById[t] ? { href: plink(playerById[t]), label: "Player page", ext: "" } : none;
+      case "signup": return SU ? { href: "#signup", label: "Sign up", ext: "" } : none;
+      case "url": return /^https?:\/\//i.test(t || "") ? { href: t, label: "Learn more", ext: ' target="_blank" rel="noopener"' } : none;
+      default: return none;
+    }
+  }
   const recapGame = (n) => n.game && ALL.find((x) => x.played && x.date.startsWith(n.game) && (!n.team || x.home === n.team || x.away === n.team));
   function newsCards(items) {
     return `<div class="newsgrid">${items.map((n) => {
-      const g = recapGame(n);
+      const g = n.article ? null : recapGame(n);
       const pic = n.photo || (POOL.length ? POOL[(S.news.indexOf(n) + 1) % POOL.length] : null);
-      const ph = pic ? ` photo" style="--photo:${bgUrl(pic)};` : `" style="`;
+      const ph = pic ? ` photo${n.article ? " own" : ""}" style="--photo:${bgUrl(pic)};${n.focus ? `--pos:${+n.focus.x}% ${+n.focus.y}%;` : ""}` : `" style="`;
       const art = g
         ? `<div class="art${ph}--c:${esc(TEAMS[winner(g)].color)}"><span class="vsart">${logo(g.home, "md")}<b class="num">${g.score[0]}–${g.score[1]}</b>${logo(g.away, "md")}</span></div>`
         : `<div class="art${ph}"><span class="big-logo">${pic ? "" : esc(L.logo)}</span></div>`;
       const inner = `${art}<div class="story"><div class="row"><span class="chip">${esc(n.tag)}</span><span class="label">${esc(day(n.date))}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div>`;
-      return g ? `<a class="card ncard" href="#game/${g.id}">${inner}</a>` : `<div class="card ncard">${inner}</div>`;
+      const href = n.article ? `#article/${esc(n.article)}` : g ? `#game/${g.id}` : "";
+      return href ? `<a class="card ncard" href="${href}">${inner}</a>` : `<div class="card ncard">${inner}</div>`;
     }).join("")}</div>`;
   }
 
@@ -263,9 +287,10 @@
 
   // ---------- home banner: a slideshow ----------
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-  // Slides after the first: the closest game of the last round, the scoring leader, first place and the latest league post.
+  // The automatic slides besides the league one: the closest game of the last round, the scoring leader,
+  // first place and the latest article or league post.
   function heroSlides(lastRound) {
-    const out = [];
+    const out = {};
     const close = [...lastRound].sort((a, b) => Math.abs(a.score[0] - a.score[1]) - Math.abs(b.score[0] - b.score[1]))[0];
     if (close) {
       const w = winner(close), l = opp(close, w);
@@ -273,7 +298,7 @@
       const star = (close.potg && all.find((x) => x.key === close.potg)) || [...all].sort((a, b) => eff(b) - eff(a))[0];
       const side = (t, i) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small class="num${close.score[i] < close.score[1 - i] ? " lose" : ""}">${close.score[i]}</small></div>`;
       const [w1, ...wr] = w.split(" ");
-      out.push({ c: TEAMS[w].color, body: `<div class="hero-copy"><span class="label">${esc(stageOf(close))} · Closest finish</span>
+      out.closest = ({ c: TEAMS[w].color, body: `<div class="hero-copy"><span class="label">${esc(stageOf(close))} · Closest finish</span>
         <h2 class="big">${esc(w1)} <span>${esc(wr.join(" "))}</span></h2>
         <p class="meta">Beat ${esc(l)} by ${Math.abs(close.score[0] - close.score[1])}.${star ? ` <b>${esc(star.name)}</b> (${esc(short(star.team))}) had ${plural(star.pts, "point")}, ${plural(star.reb, "rebound")} and ${plural(star.ast, "assist")}.` : ""}</p></div>
         <a class="nextpanel" href="#game/${close.id}"><div class="np-top"><span class="label">Final · ${esc(day(close.date))}</span></div>
@@ -283,7 +308,7 @@
     const s = leadersIn("pts", 1)[0];
     if (s) {
       const [f, last] = nameParts(s.p.name);
-      out.push({ c: TEAMS[s.p.team].color, body: `<div class="hero-copy"><span class="label">League leader · Points</span>
+      out.leader = ({ c: TEAMS[s.p.team].color, body: `<div class="hero-copy"><span class="label">League leader · Points</span>
         <h2 class="big">${esc(f)} <span>${esc(last)}</span></h2>
         <p class="meta">${esc(s.p.team)} · #${esc(s.p.no)}${s.p.pos ? " · " + esc(s.p.pos) : ""}</p>
         <dl class="hero-stats">${[["PPG", "pts"], ["RPG", "reb"], ["APG", "ast"], ["EFF", "eff"]].map(([l, k]) => `<div><dt>${l}</dt><dd class="num">${avg(s.t[k], s.gp)}</dd></div>`).join("")}</dl><a class="hero-link phone-only" href="${plink(s.p)}">Player page →</a></div>
@@ -293,7 +318,7 @@
     if (played.length) {
       const top = TABLE[0], [t1, ...tr] = top.team.split(" ");
       const row = (r) => `<div class="mini-row">${`<span class="label">${r.rank}</span>`}${logo(r.team)}<b>${esc(short(r.team))}</b><span class="num">${r.w}-${r.l}</span></div>`;
-      out.push({ c: TEAMS[top.team].color, body: `<div class="hero-copy"><span class="label">Standings · First place</span>
+      out.standings = ({ c: TEAMS[top.team].color, body: `<div class="hero-copy"><span class="label">Standings · First place</span>
         <h2 class="big">${esc(t1)} <span>${esc(tr.join(" "))}</span></h2>
         <p class="meta">${[top.streak && `${top.streak[0] === "W" ? "Won" : "Lost"} ${top.streak.slice(1)} straight`, TABLE[1] && (TABLE[1].gb ? `${plural(TABLE[1].gb, "game")} clear of ${esc(TABLE[1].team)}` : `level with ${esc(TABLE[1].team)}`)].filter(Boolean).join(" · ")}</p>
         <dl class="hero-stats"><div><dt>Record</dt><dd class="num">${top.w}-${top.l}</dd></div><div><dt>PPG</dt><dd class="num">${top.ppg.toFixed(1)}</dd></div><div><dt>OPPG</dt><dd class="num">${top.oppg.toFixed(1)}</dd></div><div><dt>Last 5</dt><dd class="num">${top.last5.filter((x) => x === "W").length}-${top.last5.filter((x) => x === "L").length}</dd></div></dl><a class="hero-link phone-only" href="#standings">Standings →</a></div>
@@ -301,18 +326,33 @@
           <div class="ministand">${TABLE.slice(0, 4).map(row).join("")}</div>
           <div class="np-top"><span class="label">${esc(L.season)}</span><span class="label">Standings →</span></div></a>` });
     }
-    const post = S.news.find((n) => !recapGame(n));
-    if (post) out.push({ c: L.color, body: `<div class="hero-copy"><span class="label">${esc(post.tag)} · ${esc(day(post.date))}</span>
+    const post = newsItems().find((n) => n.article || !recapGame(n));
+    if (post) out.news = { c: L.color, img: post.photo, focus: post.focus, body: `<div class="hero-copy"><span class="label">${esc(post.tag || "News")} · ${esc(day(post.date))}</span>
         <h2 class="big long">${esc(post.title)}</h2>
         <p class="meta">${esc(post.body)}</p>
-        <a class="hero-link" href="#news">All news →</a></div>${logo(null, "xl")}` });
+        <a class="hero-link" href="${post.article ? `#article/${esc(post.article)}` : "#news"}">${post.article ? "Read story" : "All news"} →</a></div>${post.photo ? "" : logo(null, "xl")}` };
     return out;
   }
 
+  // A slide the organisers made in the editor: their picture, words and where it leads.
+  function customSlide(s) {
+    const to = linkOf(s.link);
+    const button = s.button || to.label;
+    const big = s.headline.length > 22 ? "big long" : "big";
+    return { c: L.color, img: s.image, focus: s.focus, custom: true, body: `<div class="hero-copy">${s.label ? `<span class="label">${esc(s.label)}</span>` : ""}
+      ${s.headline ? `<h2 class="${big}">${to.href ? `<a href="${esc(to.href)}"${to.ext}>${esc(s.headline)}</a>` : esc(s.headline)}</h2>` : ""}
+      ${s.text ? `<p class="meta">${esc(s.text)}</p>` : ""}
+      ${to.href && button ? `<a class="hero-link" href="${esc(to.href)}"${to.ext}>${esc(button)} →</a>` : ""}</div>` };
+  }
+  const today = () => new Date().toISOString().slice(0, 10);
+  const showing = (s) => s.on !== false && (!s.from || s.from <= today()) && (!s.until || s.until >= today());
+  const DEFAULT_ORDER = ["league", "closest", "leader", "standings", "news"].map((auto) => ({ auto, on: true }));
+
   // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
   function hero(slides) {
-    const pic = (i) => (slides[i].champ && L.championPhoto) || POOL[i % POOL.length];
-    const bg = (i) => `${slides[i].champ ? " champ-slide" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}` : `" style="--team:${esc(slides[i].c)}`}`;
+    const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom ? "" : POOL[i % POOL.length]);
+    const pos = (f) => (f ? `;--pos:${+f.x || 0}% ${+f.y || 0}%` : "");
+    const bg = (i) => `${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
     const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("");
     const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
       ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
@@ -497,6 +537,50 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
+  // ---------- photo albums ----------
+  function albumCards(list) {
+    return `<div class="albumgrid">${list.map((a) => `<a class="card acard" href="#album/${esc(a.id)}">
+      <span class="acard-pic">${a.photos.slice(0, 3).map((p) => `<img src="${esc(p.src)}" alt="" loading="lazy">`).join("")}</span>
+      <span class="acard-txt"><b>${esc(a.title)}</b><span class="label">${esc(day(a.date))} · ${plural(a.photos.length, "photo")}</span></span></a>`).join("")}</div>`;
+  }
+  // Full-screen viewer: swipe or arrows to move, Esc or ✕ to close.
+  let box = null;
+  function openPhoto(a, i) {
+    closePhoto();
+    box = document.createElement("div");
+    box.className = "lightbox";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-label", a.title);
+    const show = (k) => {
+      i = (k + a.photos.length) % a.photos.length;
+      const p = a.photos[i];
+      box.innerHTML = `<button type="button" class="lb-close" data-lb="close" aria-label="Close">✕</button>
+        <div class="lb-track"><img src="${esc(p.src)}" alt="${esc(p.caption)}"></div>
+        ${a.photos.length > 1 ? `<button type="button" class="lb-nav prev" data-lb="-1" aria-label="Previous photo">‹</button><button type="button" class="lb-nav next" data-lb="1" aria-label="Next photo">›</button>` : ""}
+        <p class="lb-cap">${p.caption ? esc(p.caption) + " · " : ""}<span>${i + 1} / ${a.photos.length}</span></p>`;
+    };
+    show(i);
+    box.addEventListener("click", (e) => { const b = e.target.closest("[data-lb]"); if (b) b.dataset.lb === "close" ? closePhoto() : show(i + +b.dataset.lb); else if (e.target === box) closePhoto(); });
+    let x0 = null;
+    box.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
+    box.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) show(i + (dx < 0 ? 1 : -1)); x0 = null; });
+    box.keys = (e) => { if (e.key === "Escape") closePhoto(); if (e.key === "ArrowRight") show(i + 1); if (e.key === "ArrowLeft") show(i - 1); };
+    document.addEventListener("keydown", box.keys);
+    document.body.appendChild(box);
+    document.body.style.overflow = "hidden";
+  }
+  function closePhoto() { if (!box) return; document.removeEventListener("keydown", box.keys); box.remove(); box = null; document.body.style.overflow = ""; }
+
+  // The organisers' editor lives in admin.js, loaded only when someone opens #admin.
+  function loadAdmin() {
+    if (document.getElementById("admin-js")) return;
+    const s = document.createElement("script");
+    s.id = "admin-js";
+    s.src = "admin.js";
+    s.onload = () => window.CBCAdmin && window.CBCAdmin.mount();
+    document.body.appendChild(s);
+  }
+
   // ---------- pages ----------
   const pages = {
     home() {
@@ -525,14 +609,14 @@
           <span class="ltile-val num">${avg(s.t[key], s.gp)}<small>${unit}</small></span>
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
-      return `${hero([
-          { c: L.color, champ: !!(PO && PO.champion), body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
+      const autos = { ...heroSlides(lastRound), league: { c: L.color, champ: !!(PO && PO.champion), body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
             <p class="meta">${esc(L.tagline)}</p>
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
-          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}` },
-          ...heroSlides(lastRound)
-        ])}
+          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}` } };
+      const order = C().slides && C().slides.length ? C().slides : DEFAULT_ORDER;
+      const slides = order.filter(showing).map((s) => (s.auto ? autos[s.auto] : customSlide(s))).filter(Boolean);
+      return `${hero(slides.length ? slides : [autos.league])}
         ${signupBand()}
         ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
@@ -542,7 +626,8 @@
         ${PO && !PO.champion ? (() => { const r = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0]; return `<section>${sh(`Playoffs · ${esc(r.name)}`, "#playoffs", "Bracket")}<div class="series-grid">${r.series.map(seriesCard).join("")}</div></section>`; })() : ""}
         ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
         <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
-        <section>${sh("News", "#news", "All news")}${newsCards(S.news.slice(0, 3)).replace('class="newsgrid"', 'class="newsgrid swipe"')}</section>`;
+        ${C().albums.length ? `<section>${sh("Photos", "#photos", "All albums")}${albumCards(C().albums.slice(0, 3)).replace('class="albumgrid"', 'class="albumgrid swipe"')}</section>` : ""}
+        <section>${sh("News", "#news", "All news")}${newsCards(newsItems().slice(0, 3)).replace('class="newsgrid"', 'class="newsgrid swipe"')}</section>`;
     },
 
     games(tab) {
@@ -657,7 +742,41 @@
     },
 
     news() {
-      return head(L.name, "News") + newsCards(S.news);
+      return head(L.name, "News") + newsCards(newsItems());
+    },
+
+    article(aid) {
+      const a = articleById(aid);
+      if (!a) return head(L.name, "News") + `<p class="card empty">That story is no longer on the site. <a href="#news">All news →</a></p>`;
+      const g = gameByKey(a.game);
+      const paras = a.body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).map((p) => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+      const more = newsItems().filter((n) => n.article !== a.id).slice(0, 3);
+      return `<section class="art-top band${a.image ? " photo" : ""}" style="${a.image ? `--photo:${bgUrl(a.image)};--pos:${+a.focus.x}% ${+a.focus.y}%` : ""}">
+          <button class="back" data-back aria-label="Back">←</button>
+          <div class="art-head"><span class="label">${esc(a.tag || "News")} · ${esc(dfmt(a.date + "T12:00", { weekday: "long", month: "long", day: "numeric", year: "numeric" }))}</span>
+          <h1>${esc(a.title)}</h1>${a.summary ? `<p class="meta">${esc(a.summary)}</p>` : ""}</div></section>
+        <article class="art-body">${paras || ""}
+          ${g ? `<div class="art-game"><span class="label">The game</span>${gameCard(g)}</div>` : ""}</article>
+        ${more.length ? `<section>${sh("More news", "#news", "All news")}${newsCards(more)}</section>` : ""}`;
+    },
+
+    photos() {
+      const list = C().albums;
+      return head(L.name, "Photos") + (list.length ? albumCards(list) : `<p class="card empty">No photo albums yet.</p>`);
+    },
+
+    album(aid) {
+      const a = albumById(aid);
+      if (!a) return head(L.name, "Photos") + `<p class="card empty">That album is no longer on the site. <a href="#photos">All albums →</a></p>`;
+      const g = gameByKey(a.game);
+      return `${head(`${dfmt(a.date + "T12:00", { month: "long", day: "numeric", year: "numeric" })} · ${plural(a.photos.length, "photo")}`, a.title)}
+        <div class="stack">${g ? `<div class="album-game">${gameCard(g)}</div>` : ""}
+        <div class="gallery">${a.photos.map((p, i) => `<button type="button" class="gal-item" data-photo="${i}" aria-label="Open photo ${i + 1}"><img src="${esc(p.src)}" alt="${esc(p.caption)}" loading="lazy"></button>`).join("")}</div></div>`;
+    },
+
+    admin() {
+      setTimeout(() => (window.CBCAdmin ? window.CBCAdmin.mount() : loadAdmin()), 0);
+      return head(L.name, "Organisers") + `<div class="stack" id="admin"><p class="card empty">Loading…</p></div>`;
     },
 
     game(id) {
@@ -792,10 +911,11 @@
   }
 
   // ---------- routing ----------
-  const NAV = { game: "games", team: "teams", player: "teams", signups: "signup" };
+  const NAV = { game: "games", team: "teams", player: "teams", signups: "signup", article: "news", album: "photos", admin: "signup" };
   function route() {
     const [page, arg] = decodeURIComponent((location.hash || "#home").slice(1)).split("/");
     const render = pages[page] || pages.home;
+    closePhoto();
     app.innerHTML = render(arg);
     startHero();
     const navKey = NAV[page] || (pages[page] ? page : "home");
@@ -808,7 +928,7 @@
   let lastHash = location.hash;
   window.addEventListener("hashchange", () => {
     const [p0, a0] = lastHash.split("/"), [p1, a1] = location.hash.split("/");
-    const samePage = p0 === p1 && (p1 !== "#game" && p1 !== "#team" && p1 !== "#player" || a0 === a1);
+    const samePage = p0 === p1 && (!["#game", "#team", "#player", "#article", "#album"].includes(p1) || a0 === a1);
     lastHash = location.hash;
     route();
     if (!samePage) window.scrollTo(0, 0);
@@ -828,6 +948,8 @@
     const step = e.target.closest("[data-hero], [data-hero-dot]");
     if (step) { const h = step.closest(".hero"), track = h.querySelector(".hero-track"); h.stop();
       h.go(step.dataset.heroDot != null ? +step.dataset.heroDot : Math.round(track.scrollLeft / track.clientWidth) + +step.dataset.hero); return; }
+    const ph = e.target.closest("[data-photo]");
+    if (ph) { const a = albumById(decodeURIComponent(location.hash.split("/")[1] || "")); if (a) openPhoto(a, +ph.dataset.photo); return; }
     const go = e.target.closest("[data-go]");
     if (go) { location.hash = go.dataset.go; return; }
     const sort = e.target.closest("[data-sort]");
@@ -857,6 +979,7 @@
   document.getElementById("ticker").innerHTML = ticker();
   if (PO) document.querySelectorAll('a[href="#playoffs"]').forEach((a) => (a.hidden = false));
   if (SU) document.querySelectorAll('a[href="#signup"]').forEach((a) => (a.hidden = false));
+  if (C().albums.length) document.querySelectorAll('a[href="#photos"]').forEach((a) => (a.hidden = false));
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
@@ -871,6 +994,10 @@
     store.set("theme", dark ? "light" : "dark");
   };
   document.querySelectorAll(".theme, .sheet-theme").forEach((b) => b.addEventListener("click", switchTheme));
+
+  // What the editor needs from here: the games, teams and players to link to, and a way to redraw.
+  window.CBC = { S, L, ALL, TEAMS, teamNames, PLAYERS, gameKey, stageOf, short, day, esc, route, memo, field, sh, logo,
+    played: (g) => g.played };
 
   route();
 })();

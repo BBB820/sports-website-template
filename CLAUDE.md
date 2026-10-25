@@ -37,6 +37,13 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   (`RAILWAY_VOLUME_MOUNT_PATH`) or `DATA_DIR`, else `.data/` (lost on redeploy). Public: `POST /api/signups`,
   `GET /api/signups/summary` (counts only). Private: `GET /api/signups` with header `x-passcode` = `SIGNUP_PASSCODE`;
   the organisers' page is `/#signups` (not linked anywhere). Contact details must never appear on a public page.
+- `content.js` stores what the organisers write in `content.json` (same folder) and their pictures in `uploads/`:
+  slideshow order (automatic slides `league`, `closest`, `leader`, `standings`, `news` mixed with their own picture
+  slides, each with on/off, link and show-from/until dates), articles (`#article/ID`) and photo albums (`#photos`,
+  `#album/ID`, full-screen viewer). Public: `GET /api/content` (switched-on and published only). Private, header
+  `x-passcode` = `SIGNUP_PASSCODE`: `GET`/`PUT /api/admin/content`, `POST /api/admin/upload` (JPEG/PNG/WebP, checked
+  by first bytes; the editor shrinks photos to 2000px JPEG on the phone first). The editor is `/#admin` (`admin.js`,
+  loaded only there; not linked anywhere). Games are referenced as `date|home team`, players by site id.
 
 ## Design (settled with the owner after several rounds)
 

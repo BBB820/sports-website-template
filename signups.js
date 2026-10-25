@@ -132,4 +132,4 @@ async function summary() {
   return bySeason;
 }
 
-module.exports = { add, list, summary, InputError, DIR };
+module.exports = { add, list, summary, InputError, DIR, passcodeOk, hasPasscode: () => !!PASSCODE, persistent };

@@ -74,6 +74,16 @@ box: {
 - **Team logos and player photos**: Hooperville's are used when it has them. To add or override, list them by name in `pictures` in `data.js`: `teams: { "Team name": "photos/logo.png" }`, `players: { "Player name": "photos/face.jpg" }`.
 - A picture that cannot load falls back to the team colour, initials or emoji.
 
+## Organisers' editor
+
+Open **/#admin** on the live site and enter the organisers' passcode (the same one as the sign-ups list, `SIGNUP_PASSCODE` on Railway). There you can:
+
+- **Slideshow**: put the home banner's slides in any order, switch any off, and add your own slides with a picture, headline, short text, a button and where it goes (an article, a photo album, a game's box score, a team, a player, the sign-up page or any web address). A slide can show only between two dates.
+- **Articles**: write stories with a picture, summary and paragraphs, linked to a game if you like. They appear on the News page and on Home.
+- **Photos**: make albums from several photos at once, with captions. They get their own Photos page.
+
+Photos are shrunk on the phone before they are sent. Everything is kept on the Railway volume, like the sign-ups; without a volume it is lost on every redeploy (the editor warns about this).
+
 ## Run locally
 
 `npm start`, then open http://localhost:8080. Or just open `index.html`.

@@ -23,6 +23,7 @@
         <a href="#playoffs" hidden>Playoffs</a>
         <a href="#teams">Teams</a>
         <a href="#news">News</a>
+        <a href="#photos" hidden>Photos</a>
         <a href="#signup" class="nav-cta" hidden>Sign up</a>
       </nav>
       <button class="theme" type="button" aria-label="Switch light or dark">◐</button>
@@ -49,6 +50,7 @@
     <a href="#teams">Teams</a>
     <a href="#playoffs" hidden>Playoffs</a>
     <a href="#news">News</a>
+    <a href="#photos" hidden>Photos</a>
     <a href="#signup" class="sheet-cta" hidden>Sign up for next season</a>
     <button type="button" class="sheet-theme">Light / dark</button>
   </div>
@@ -60,6 +62,8 @@
     // Use the live league from Hooperville when the server can reach it; otherwise the sample in data.js.
     (async () => {
       const sample = window.SITE;
+      // The organisers' own slides, articles and photo albums (empty without the server).
+      const content = fetch("/api/content", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       try {
         const res = await fetch("/api/site-data", { cache: "no-store" });
         const live = res.ok ? await res.json() : null;
@@ -73,6 +77,7 @@
           };
         }
       } catch { /* offline or no server: keep the sample */ }
+      window.SITE.content = (await content) || { slides: [], articles: [], albums: [] };
       const app = document.createElement("script");
       app.src = "app.js";
       document.body.appendChild(app);
