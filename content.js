@@ -8,7 +8,7 @@ const { InputError, DIR, passcodeOk, hasPasscode, persistent } = require("./sign
 
 const FILE = path.join(DIR, "content.json");
 const UPLOADS = path.join(DIR, "uploads");
-const AUTO = ["league", "closest", "leader", "standings", "news"];
+const AUTO = ["league", "gotw", "closest", "leader", "standings", "news"];
 const LINKS = ["none", "article", "album", "game", "team", "player", "signup", "url"];
 const EMPTY = () => ({ slides: AUTO.map((auto) => ({ auto, on: true })), articles: [], albums: [] });
 
@@ -44,7 +44,12 @@ const album = (a) => ({ id: id(a && a.id), published: !!(a && a.published), titl
 function clean(doc) {
   if (!doc || typeof doc !== "object") throw new InputError("Nothing was sent");
   const slides = (Array.isArray(doc.slides) ? doc.slides : []).slice(0, 40).map(slide);
-  for (const auto of AUTO) if (!slides.some((s) => s.auto === auto)) slides.push({ auto, on: false });
+  // A newer automatic slide the saved list does not know yet goes in after the one before it, switched on.
+  AUTO.forEach((auto, k) => {
+    if (slides.some((s) => s.auto === auto)) return;
+    const prev = k ? slides.findIndex((s) => s.auto === AUTO[k - 1]) : -1;
+    slides.splice(prev + 1, 0, { auto, on: true });
+  });
   const seen = new Set();
   return {
     slides: slides.filter((s) => (s.auto ? (seen.has(s.auto) ? false : seen.add(s.auto)) : s.headline || s.image)),

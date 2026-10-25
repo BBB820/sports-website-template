@@ -334,6 +334,56 @@
     return out;
   }
 
+  // The first slide: a championship banner. The race for the title during the season, the road to it in
+  // the playoffs, and the champion (with confetti) once crowned.
+  const TROPHY = `<svg class="trophy-svg" viewBox="0 0 200 250" aria-hidden="true"><defs>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff4b8"/><stop offset=".35" stop-color="#f6c945"/><stop offset=".7" stop-color="#d49b1c"/><stop offset="1" stop-color="#9c6a08"/></linearGradient>
+    <linearGradient id="goldDark" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d9a52a"/><stop offset="1" stop-color="#7d5406"/></linearGradient></defs>
+    <path d="M44 42 C8 42 8 104 54 112" fill="none" stroke="url(#gold)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M156 42 C192 42 192 104 146 112" fill="none" stroke="url(#gold)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M40 22 H160 V72 C160 122 130 150 100 152 C70 150 40 122 40 72 Z" fill="url(#gold)"/>
+    <path d="M56 32 C54 70 60 110 84 138" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="7" stroke-linecap="round"/>
+    <polygon points="100,58 108,80 131,80 113,94 120,116 100,103 80,116 87,94 69,80 92,80" fill="#fff8d6" fill-opacity=".85"/>
+    <path d="M88 150 H112 L108 186 H92 Z" fill="url(#goldDark)"/>
+    <rect x="64" y="184" width="72" height="16" rx="4" fill="url(#gold)"/>
+    <rect x="50" y="200" width="100" height="34" rx="5" fill="url(#goldDark)"/>
+    <rect x="66" y="210" width="68" height="14" rx="2" fill="#000" fill-opacity=".25"/></svg>`;
+  function titleSlide() {
+    const art = (extra = "") => `<div class="trophy-art">${extra}${TROPHY}</div>`;
+    // The playoff champion; with no playoffs, first place once every game is played.
+    const done = !PO && played.length && !upcoming.length;
+    const t = PO && PO.champion ? PO.champion : done ? TABLE[0].team : null;
+    if (t) {
+      const mvp = PO && PO.mvp && playerByKey(PO.mvp.key), [a, ...b] = t.split(" "), r = TEAMS[t] && rowOf(t);
+      return { c: TEAMS[t] ? TEAMS[t].color : L.color, champ: true, cls: "title-slide crowned", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} champions</span>
+        <h1>${esc(a)} <span>${esc(b.join(" "))}</span></h1>
+        <p class="meta">${PO && PO.mvp ? `Finals MVP <b>${esc(mvp ? mvp.name : PO.mvp.name)}</b>${r ? " · " : ""}` : ""}${r ? `${r.w}-${r.l} ${PO ? "in the regular season" : "· first place"}` : ""}</p>
+        <a class="hero-link" href="${PO ? "#playoffs" : "#standings"}">${PO ? "The playoffs" : "Final standings"} →</a></div>${art(TEAMS[t] ? `<span class="champ-logo">${logo(t, "xl")}</span>` : "")}` };
+    }
+    const contenders = TABLE.slice(0, 4).map((r) => `<a class="contender" href="${tlink(r.team)}"><b class="num">${r.rank}</b>${logo(r.team)}<span>${esc(short(r.team))}</span><em class="num">${r.w}-${r.l}</em></a>`).join("");
+    if (PO) {
+      const next = pgames.find((g) => !g.played), round = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0];
+      return { c: L.color, cls: "title-slide", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} · Playoffs</span>
+        <h1>Road to the <span>title</span></h1>
+        <p class="meta">${esc(round.name)}${next ? ` · Next: <b>${esc(short(next.home))} vs ${esc(short(next.away))}</b>, ${esc(day(next.date))} ${esc(time(next.date))}` : ""}</p>
+        <a class="hero-link" href="#playoffs">The bracket →</a></div>${art()}` };
+    }
+    const left = dates.length - new Set(played.map((g) => g.date.slice(0, 10))).size;
+    return { c: L.color, cls: "title-slide", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} · Championship</span>
+      <h1>Chase for the <span>crown</span></h1>
+      <p class="meta">${left > 0 ? `${plural(left, "week")} left in the regular season.` : "The regular season is done."} Who lifts the trophy?</p>
+      ${played.length ? `<div class="contenders">${contenders}</div>` : ""}
+      <a class="hero-link" href="#standings">Standings →</a></div>${art()}` };
+  }
+  // Game of the Week (or the next playoff game) on a slide of its own.
+  function gotwSlide(g) {
+    const nick = (t) => t.split(" ").slice(-1)[0];
+    return { c: TEAMS[g.home].color, body: `<div class="hero-copy"><span class="label">${g.playoff ? esc(stageOf(g)) : `Game of the week · ${esc(stageOf(g))}`}</span>
+      <h2 class="big">${esc(nick(g.home))} <span>vs ${esc(nick(g.away))}</span></h2>
+      <p class="meta">${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(L.venue)}</p>
+      <a class="hero-link phone-only" href="#game/${g.id}">Game preview →</a></div>${featurePanel(g)}` };
+  }
+
   // A slide the organisers made in the editor: their picture, words and where it leads.
   function customSlide(s) {
     const to = linkOf(s.link);
@@ -346,13 +396,13 @@
   }
   const today = () => new Date().toISOString().slice(0, 10);
   const showing = (s) => s.on !== false && (!s.from || s.from <= today()) && (!s.until || s.until >= today());
-  const DEFAULT_ORDER = ["league", "closest", "leader", "standings", "news"].map((auto) => ({ auto, on: true }));
+  const DEFAULT_ORDER = ["league", "gotw", "closest", "leader", "standings", "news"].map((auto) => ({ auto, on: true }));
 
   // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
   function hero(slides) {
-    const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom ? "" : POOL[i % POOL.length]);
+    const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom || slides[i].noPool ? "" : POOL[i % POOL.length]);
     const pos = (f) => (f ? `;--pos:${+f.x || 0}% ${+f.y || 0}%` : "");
-    const bg = (i) => `${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
+    const bg = (i) => `${slides[i].cls ? " " + slides[i].cls : ""}${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
     const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("");
     const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
       ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
@@ -591,14 +641,6 @@
       const nextDay = upcoming.length ? upcoming[0].date.slice(0, 10) : null;
       const nextRound = upcoming.filter((g) => g.date.startsWith(nextDay));
       const week = nextRound.length ? weekOf(nextRound[0]) : dates.length;
-      const totalPts = played.reduce((a, g) => a + g.score[0] + g.score[1], 0);
-      const [first, ...rest] = L.name.split(" ");
-      const stats = [
-        ["Week", `${week}<small> of ${dates.length}</small>`],
-        ["Teams", teamNames.length],
-        ["Games played", played.length],
-        ["Points per team", played.length ? (totalPts / played.length / 2).toFixed(1) : "–"]
-      ];
       const result = (g) => {
         const side = (t, i) => `<span class="rs-team${g.score[i] < g.score[1 - i] ? " lose" : ""}">${logo(t)}<b>${esc(short(t))}</b><span class="num">${g.score[i]}</span></span>`;
         return `<a class="rs" href="#game/${g.id}">${side(g.home, 0)}${side(g.away, 1)}<span class="rs-end label">Final →</span></a>`;
@@ -609,11 +651,7 @@
           <span class="ltile-val num">${avg(s.t[key], s.gp)}<small>${unit}</small></span>
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
-      const autos = { ...heroSlides(lastRound), league: { c: L.color, champ: !!(PO && PO.champion), body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
-            <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
-            <p class="meta">${esc(L.tagline)}</p>
-            <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>
-          ${PO && PO.champion ? championPanel() : feature ? featurePanel(feature) : logo(null, "xl")}` } };
+      const autos = { ...heroSlides(lastRound), league: titleSlide(), gotw: feature ? gotwSlide(feature) : null };
       const order = C().slides && C().slides.length ? C().slides : DEFAULT_ORDER;
       const slides = order.filter(showing).map((s) => (s.auto ? autos[s.auto] : customSlide(s))).filter(Boolean);
       return `${hero(slides.length ? slides : [autos.league])}

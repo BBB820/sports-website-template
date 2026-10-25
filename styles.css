@@ -141,6 +141,34 @@ a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32
 .slide.champ-slide { position: relative; overflow: hidden; }
 .slide.champ-slide.photo { background: linear-gradient(90deg, rgb(0 0 0 / .72), rgb(0 0 0 / .25) 60%, rgb(0 0 0 / .1)), var(--photo) center / cover no-repeat, var(--depth); }
 .slide.champ-slide h1 span { color: #ffd666; }
+
+/* Championship banner: black and gold, a glowing trophy, faint light rays. Team colour once crowned. */
+.slide.title-slide { position: relative; overflow: hidden;
+  background: radial-gradient(ellipse 45% 70% at 78% 50%, rgb(255 200 80 / .28), transparent 70%),
+    var(--court) right -120px center / auto 130% no-repeat, linear-gradient(120deg, #07080b, #14110a 55%, #0b0b0d); }
+.slide.title-slide.crowned { background: radial-gradient(ellipse 45% 70% at 78% 50%, rgb(255 214 102 / .35), transparent 70%),
+    var(--court) right -120px center / auto 130% no-repeat, linear-gradient(120deg, color-mix(in srgb, var(--team) 55%, #000), color-mix(in srgb, var(--team) 80%, #000) 60%, color-mix(in srgb, var(--team) 40%, #000)); }
+.slide.title-slide::before { content: ""; position: absolute; right: -10%; top: 50%; width: 900px; height: 900px; margin-top: -450px; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgb(255 214 102 / .09) 0 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 15%, transparent 62%); mask: radial-gradient(circle, #000 15%, transparent 62%); }
+.title-slide .label.gold { color: #ffd666; }
+.title-slide h1 span { color: #ffd666; }
+.title-slide .meta b { color: #fff; }
+.trophy-art { position: relative; display: grid; place-items: center; justify-self: center; }
+.trophy-svg { width: clamp(170px, 22vw, 290px); height: auto; filter: drop-shadow(0 0 30px rgb(255 200 80 / .45)) drop-shadow(0 18px 24px rgb(0 0 0 / .5)); }
+.champ-logo { position: absolute; top: 18%; left: 50%; transform: translateX(-50%); z-index: 1; }
+.champ-logo .logo.xl { width: 84px; height: 84px; font-size: 2.6rem; box-shadow: 0 0 0 4px #ffd666; }
+.contenders { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.contender { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; background: rgb(255 255 255 / .08); border: 1px solid rgb(255 214 102 / .3); font-family: var(--display); font-weight: 700; letter-spacing: .04em; }
+.contender:hover { background: rgb(255 255 255 / .16); }
+.contender b { color: #ffd666; min-width: 1ch; }
+.contender em { font-style: normal; color: rgb(255 255 255 / .7); }
+@media (max-width: 760px) {
+  .trophy-svg { width: 120px; }
+  .title-slide .trophy-art { order: -1; justify-self: start; }
+  .title-slide::before { right: auto; left: -260px; top: 120px; width: 600px; height: 600px; margin-top: -300px; }
+  .title-slide .champ-logo .logo.xl { width: 54px; height: 54px; font-size: 1.6rem; display: grid; }
+}
 .slide > :not(.confetti) { position: relative; z-index: 1; }
 .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .confetti i { position: absolute; top: -20px; left: var(--x); width: 10px; height: 5px; background: var(--c); opacity: .9; animation: fall var(--t) linear var(--d) infinite; }

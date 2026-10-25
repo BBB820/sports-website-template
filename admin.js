@@ -3,10 +3,11 @@
 (() => {
   const { S, ALL, TEAMS, teamNames, PLAYERS, gameKey, stageOf, short, day, esc, memo, field, logo } = window.CBC;
   const AUTO = {
-    league: ["🏀", "League banner", "Key numbers with Game of the Week, or the champion"],
+    league: ["🏆", "Championship banner", "The race for the title, the playoffs, then the champion"],
+    gotw: ["🏀", "Game of the Week", "The coming round's best matchup, or the next playoff game"],
     closest: ["⏱", "Closest finish", "Last round's closest game, with a box score link"],
     leader: ["🔥", "Top scorer", "The league's points leader"],
-    standings: ["🏆", "First place", "The team on top, with the top four"],
+    standings: ["🥇", "First place", "The team on top, with the top four"],
     news: ["📰", "Latest story", "Your newest article, or the newest league post"]
   };
   const LINKS = [["none", "No link"], ["article", "An article"], ["album", "A photo album"], ["game", "A game (box score)"], ["team", "A team"], ["player", "A player"], ["signup", "The sign-up page"], ["url", "A web address"]]
