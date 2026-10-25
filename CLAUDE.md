@@ -12,7 +12,7 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 | What | Where |
 |---|---|
 | Code | https://github.com/BBB820/sports-website-template (`main` deploys) |
-| Live site | Railway project `fd86447e-794a-477d-b45d-02b07c8f3bee`, deploys every push to `main` (check with `gh api repos/BBB820/sports-website-template/deployments`) |
+| Live site | **https://sports-website-template-production.up.railway.app** (editor: `/#admin`; not reachable from the cloud sandbox). Railway project `fd86447e-794a-477d-b45d-02b07c8f3bee`, deploys every push to `main` (check with `gh api repos/BBB820/sports-website-template/deployments`) |
 | Stats source | Hooperville at **https://hoopr.id** (old address `https://web-production-69499.up.railway.app` kept as fallback). Its code is `BBB820/basketball_stats`, read-only from here; its newest features (logos, season awards) may not be on GitHub yet |
 | Preview for the owner | https://claude.ai/artifact/F6Z2XFtV7QpnXEULwaocgW (static, so it always shows the sample data) |
 
