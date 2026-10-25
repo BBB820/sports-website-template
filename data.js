@@ -13,10 +13,10 @@ window.SITE = {
     founded: 2024,
     email: "cubaoballerclub@example.com",
     // Pictures behind the Home banner slides (one per slide, in turn) and the news stories, plus the one
-    // behind the first slide once a champion is crowned. These are drawn stand-ins in the photos folder;
-    // swap in the league's own game photos, e.g. "photos/finals.jpg". If one can't load, the team colour shows.
-    photos: ["photos/game-1.jpg", "photos/game-2.jpg", "photos/game-3.jpg", "photos/game-4.jpg", "photos/game-5.jpg"],
-    championPhoto: "photos/champions.jpg"
+    // behind the first slide once a champion is crowned. Put the files in the photos folder and list them,
+    // e.g. "photos/finals.jpg". Empty means plain team colours; if one can't load, the team colour shows.
+    photos: [],
+    championPhoto: ""
   },
 
   // The league's own pictures, by name. They win over anything Hooperville has.

@@ -30,7 +30,7 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   up to the real final score (seeded, so stable). Playoff games are kept out of standings and season stats.
 - `data.js` supplies branding (colour, logo emoji, tagline, venue, email) and the `signup` settings even when live.
   Also pictures: `league.photos` (banner slides and news) and `league.championPhoto` (first slide once there is a
-  champion, with CSS confetti), all drawn stand-ins in `photos/` until the owner sends real game photos (outside image
+  champion, with CSS confetti), empty until real photos are added to `photos/` (outside image
   hosts are blocked in the sandbox and in the preview, so keep pictures in the repo); `pictures.teams` / `pictures.players`
   by name override Hooperville's.
 - `signups.js` stores season sign-ups (teams and free agents) in `signups.json` under the Railway volume
