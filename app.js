@@ -311,12 +311,14 @@
 
   // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
   function hero(slides) {
-    const bg = (i) => POOL.length ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(POOL[i % POOL.length])}` : `" style="--team:${esc(slides[i].c)}`;
+    const pic = (i) => (slides[i].champ && L.championPhoto) || POOL[i % POOL.length];
+    const bg = (i) => `${slides[i].champ ? " champ-slide" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}` : `" style="--team:${esc(slides[i].c)}`}`;
+    const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("");
     const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
       ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
       <button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></div>`;
     return `<section class="hero band" aria-roledescription="carousel" aria-label="Highlights">
-      <div class="hero-track">${slides.map((x, i) => `<div class="top slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.body}</div>`).join("")}</div>
+      <div class="hero-track">${slides.map((x, i) => `<div class="top slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.champ ? `<div class="confetti" aria-hidden="true">${confetti}</div>` : ""}${x.body}</div>`).join("")}</div>
       ${nav}</section>`;
   }
 
@@ -524,7 +526,7 @@
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
       return `${hero([
-          { c: L.color, body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
+          { c: L.color, champ: !!(PO && PO.champion), body: `<div class="hero-copy"><span class="label">${esc(L.season)} · ${esc(L.city)}</span>
             <h1>${esc(first)} <span>${esc(rest.join(" "))}</span></h1>
             <p class="meta">${esc(L.tagline)}</p>
             <dl class="hero-stats">${stats.map(([l, v]) => `<div><dt>${l}</dt><dd class="num">${v}</dd></div>`).join("")}</dl></div>

@@ -12,16 +12,11 @@ window.SITE = {
     venue: "Cubao Covered Court",
     founded: 2024,
     email: "cubaoballerclub@example.com",
-    // Photos behind the Home banner slides (one per slide, in turn) and the news stories.
-    // These are free stock photos from Unsplash for now; swap in the league's own, e.g. "photos/finals.jpg".
-    // If a photo can't load, the team colour shows instead.
-    photos: [
-      "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1600&q=70",
-      "https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1600&q=70",
-      "https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=1600&q=70",
-      "https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?auto=format&fit=crop&w=1600&q=70",
-      "https://images.unsplash.com/photo-1608245449230-4ac19066d2d0?auto=format&fit=crop&w=1600&q=70"
-    ]
+    // Pictures behind the Home banner slides (one per slide, in turn) and the news stories, plus the one
+    // behind the first slide once a champion is crowned. These are drawn stand-ins in the photos folder;
+    // swap in the league's own game photos, e.g. "photos/finals.jpg". If one can't load, the team colour shows.
+    photos: ["photos/game-1.jpg", "photos/game-2.jpg", "photos/game-3.jpg", "photos/game-4.jpg", "photos/game-5.jpg"],
+    championPhoto: "photos/champions.jpg"
   },
 
   // The league's own pictures, by name. They win over anything Hooperville has.

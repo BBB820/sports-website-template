@@ -136,6 +136,14 @@ a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32
   background: var(--court) right -120px center / auto 130% no-repeat, var(--depth); }
 .slide.photo { background: linear-gradient(90deg, rgb(0 0 0 / .8), rgb(0 0 0 / .45) 60%, rgb(0 0 0 / .25)), var(--photo) center / cover no-repeat, var(--depth); }
 .slide.photo .big span, .slide.photo h1 span { color: var(--team); }
+.slide.champ-slide { position: relative; overflow: hidden; }
+.slide.champ-slide.photo { background: linear-gradient(90deg, rgb(0 0 0 / .72), rgb(0 0 0 / .25) 60%, rgb(0 0 0 / .1)), var(--photo) center / cover no-repeat, var(--depth); }
+.slide.champ-slide h1 span { color: #ffd666; }
+.slide > :not(.confetti) { position: relative; z-index: 1; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti i { position: absolute; top: -20px; left: var(--x); width: 10px; height: 5px; background: var(--c); opacity: .9; animation: fall var(--t) linear var(--d) infinite; }
+@keyframes fall { to { transform: translateY(var(--fall, 720px)) rotate(720deg); } }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
 @media (min-width: 900px) { .slide { grid-template-columns: 1fr auto; } .slide .nextpanel { width: 380px; } }
 .slide .big.long { font-size: clamp(2.4rem, 5.5vw, 4.2rem); line-height: .95; max-width: 16ch; }
 .hero-link.phone-only { display: none; }
