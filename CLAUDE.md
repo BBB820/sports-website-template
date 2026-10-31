@@ -49,7 +49,10 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 
 ## Design (settled with the owner after several rounds)
 
-NBA.com-style league site, modern and roomy: black masthead with a slim score strip, team-colour banners
+NBA.com-style league site, modern and roomy. **White by default** (owner's request, Oct 2026): white page, white top bar, score
+strip, phone tab bar and footer (colour variables `--bar`, `--bar-ink`, `--strip`…), cards outlined with a hairline; it does NOT follow a
+phone's dark mode, and dark is only an opt-in toggle (stored in the browser). The Home slideshow stays dark with gold as the one
+dark highlight. Older notes below that say "black masthead" describe the earlier design: slim score strip, team-colour banners
 with faint court lines, Barlow Condensed capitals for headlines and numbers, rounded cards with soft
 shadows, pill tabs. Home has five blocks: a hero slideshow (a black-and-gold championship banner: "Chase for the crown" with the top four, "Road to the title" in the playoffs, the champion with confetti once crowned or once every game is played; then Game of the Week, the
 closest finish of the last round, the scoring leader, first place, the latest league post; auto-advances every 6s,
@@ -78,6 +81,16 @@ columns stay pinned. The owner rejected both a busier version and a plainer one;
   (raster images only, cached six hours in memory, last copy kept if Hooperville is down), so the site data carries
   `/hv-logo/…` addresses. Logos are 256px squares and fill the round badge (`object-fit: cover`). The crests remain for any
   team without a logo. Hooperville has no player photos.
+
+### Quality checks that were run (Oct 2026)
+
+A scripted audit visits every page (all teams, a spread of games and players, editor, closed sign-up page) at 390px and 1280px
+in white and in the dark toggle, and checks JS errors, failed requests, sideways overflow, broken images, stray
+"undefined/NaN/null", and axe-core WCAG A/AA (contrast, keyboard access). It was clean. Re-run it after visual changes.
+Contrast rules: text on a team colour uses `readable()`/`legible()` in `app.js` (never a fixed white), team colours as text on white use
+`onWhite()`, in the dark toggle `onDark()`. Scrolling tables and clickable rows are keyboard-focusable. A game Hooperville marks "live"
+shows as live only within 2h before to 8h after its start (a test game switched to live days early is shown as scheduled).
+Page titles name the page (team, player, game score, article). Tab icons: `favicon.png`, `apple-touch-icon.png` (the league logo).
 
 ## Testing
 

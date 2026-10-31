@@ -29,6 +29,19 @@
   const hexParts = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0x888888; return [n >> 16, (n >> 8) & 255, n & 255]; };
   const toHex = (r) => "#" + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
   const shade = (hex, to, k) => toHex(hexParts(hex).map((v) => v + ((to - v) * k)));
+  // WCAG contrast, to pick readable text on any team colour and a team colour that stays readable on white.
+  const lumOf = (hex) => { const c = hexParts(hex).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lumOf(a), lumOf(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const readable = (bg) => (ratio(bg, "#ffffff") >= ratio(bg, "#111418") ? "#ffffff" : "#111418");
+  // A fill and text colour that read well together: the team colour itself when it can, else nudged until it does.
+  const legible = (bg) => {
+    const fg = readable(bg), to = fg === "#ffffff" ? 0 : 255;
+    let c = bg, k = 0;
+    while (ratio(c, fg) < 4.6 && k < 14) c = shade(bg, to, ++k * 0.04);
+    return { bg: c, fg };
+  };
+  const onDark = (hex) => { let c = hex, k = 0; while (ratio(c, "#15171a") < 4.6 && k < 20) c = shade(hex, 255, ++k * 0.05); return c; };
+  const onWhite = (hex) => { let c = hex, k = 0; while (ratio(c, "#ffffff") < 4.6 && k < 20) c = shade(hex, 0, ++k * 0.05); return c; };
   const bright = (hex) => { const [r, g, b] = hexParts(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
   // One to three letters: the initials of the first two words ("Electro Lab" → EL), or the whole name when it is short.
   const MONO = (() => {
@@ -44,7 +57,7 @@
   const crestCache = {};
   function crest(name) {
     if (crestCache[name]) return crestCache[name];
-    const p = TEAMS[name].color, light = bright(p) > 0.62, dark = bright(p) < 0.16;
+    const p = TEAMS[name].color, light = readable(p) === "#111418", dark = bright(p) < 0.16;
     const ink = light ? "#111418" : "#ffffff";                     // letters and trim
     const trim = dark ? L.color : ink;                              // near-black teams get the league's gold trim
     const deep = shade(p, 0, 0.38), glow = shade(p, 255, 0.22);
@@ -59,7 +72,7 @@
     else svg = `<circle cx="50" cy="50" r="48" fill="${p}"/><circle cx="50" cy="50" r="40" fill="none" stroke="${trim}" stroke-width="5"/><polygon points="50,13 53,21 62,21 55,26 58,34 50,29 42,34 45,26 38,21 47,21" fill="${trim}"/>${text(61, undefined, 0.86)}`;
     return (crestCache[name] = `<svg viewBox="0 0 100 100" focusable="false">${svg}</svg>`);
   }
-  document.documentElement.style.setProperty("--on-team", bright(L.color) > 0.6 ? "#111418" : "#fff");
+  document.documentElement.style.setProperty("--on-team", readable(L.color));
   // The league's own mark: black disc, gold ring, BRO in gold.
   function leagueCrest() {
     const g = L.color, mark = (L.short || L.name.slice(0, 3)).toUpperCase().slice(0, 3);
@@ -221,7 +234,7 @@
   const initials = (n) => n.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const avatar = (p) => p.photo
     ? `<span class="avatar pic" style="--c:${esc(TEAMS[p.team].color)}"><img src="${esc(p.photo)}" alt="" loading="lazy"></span>`
-    : `<span class="avatar" style="--c:${esc(TEAMS[p.team].color)}">${esc(initials(p.name))}</span>`;
+    : (() => { const l = legible(TEAMS[p.team].color); return `<span class="avatar" style="--c:${esc(l.bg)};color:${l.fg}">${esc(initials(p.name))}</span>`; })();
   // A CSS background from a picture address; the team colour underneath shows if it fails to load.
   const bgUrl = (u) => `url('${esc(encodeURI(u).replace(/'/g, "%27"))}')`;
   const POOL = (L.photos || []).filter(Boolean);
@@ -802,7 +815,7 @@
             <p class="meta"><b>${r.w}-${r.l}</b> · ${ordinal(r.rank)} in the league${r.streak ? ` · ${r.streak[0] === "W" ? "Won" : "Lost"} ${r.streak.slice(1)} straight` : ""}</p></div>
           ${logo(team, "xl")}
         </section>
-        <section class="scoreboard">${SIX.map(([label, key, low]) => `<div><span class="label">${label}</span><b class="num">${fmtSix(key, r[key])}</b><i style="color:${esc(t.color)}">${ordinal(rankIn(team, key, low))}<span class="wide"> in league</span></i></div>`).join("")}</section>
+        <section class="scoreboard">${SIX.map(([label, key, low]) => `<div><span class="label">${label}</span><b class="num">${fmtSix(key, r[key])}</b><i style="--rk:${onWhite(t.color)};--rk-dark:${onDark(t.color)}">${ordinal(rankIn(team, key, low))}<span class="wide"> in league</span></i></div>`).join("")}</section>
         <div class="stack">${seg([["roster", "Roster"], ["schedule", "Schedule"]], tab, "data-teamtab")}${body}</div>`;
     },
 
@@ -953,7 +966,7 @@
       <div class="two">
         <div>
           <section>${sh("Player of the game")}
-            <a class="card potg" style="--team:${esc(TEAMS[potg.team].color)}" href="${potgP ? plink(potgP) : "#game/" + g.id}"><span class="jersey">${esc(potg.no)}</span>
+            <a class="card potg" style="--team:${esc(TEAMS[potg.team].color)};--on-team:${readable(TEAMS[potg.team].color)}" href="${potgP ? plink(potgP) : "#game/" + g.id}"><span class="jersey">${esc(potg.no)}</span>
               <span><b>${esc(potg.name)}</b><span class="label">${esc(short(potg.team))} · ${potg.pts} pts · ${potg.reb} reb · ${potg.ast} ast · ${potg.fgm}-${potg.fga} fg</span></span>
               <span class="big">${eff(potg)}<span class="label" style="display:block">Eff</span></span></a></section>
           <section>${sh("Game leaders")}<div class="card">${cmpHead(g)}<div class="compare">${leaderRow("Points", "pts")}${leaderRow("Rebounds", "reb")}${leaderRow("Assists", "ast")}</div></div></section>
@@ -1002,6 +1015,19 @@
     }).join("")).join("");
   }
 
+  // The browser tab's and a shared link's title: what the page is about, then the league.
+  function pageTitle(page, arg) {
+    if (!page || page === "home" || !pages[page]) return L.name;
+    let t = "";
+    if (page === "team" && byShort[arg]) t = byShort[arg];
+    else if (page === "player" && playerById[arg]) t = `${playerById[arg].name} (${short(playerById[arg].team)})`;
+    else if (page === "game" && byId[arg]) { const g = byId[arg]; t = g.played ? `${short(g.home)} ${g.score[0]}–${g.score[1]} ${short(g.away)}` : `${short(g.home)} vs ${short(g.away)}`; }
+    else if (page === "article" && articleById(arg)) t = articleById(arg).title;
+    else if (page === "album" && albumById(arg)) t = albumById(arg).title;
+    else t = page[0].toUpperCase() + page.slice(1);
+    return `${t} · ${L.name}`;
+  }
+
   // ---------- routing ----------
   const NAV = { game: "games", team: "teams", player: "teams", signups: "signup", article: "news", album: "photos", admin: "signup" };
   function route() {
@@ -1010,12 +1036,14 @@
     closePhoto();
     app.innerHTML = render(arg);
     startHero();
+    app.querySelectorAll(".scroll").forEach((el) => el.setAttribute("tabindex", "0"));
+    app.querySelectorAll("tr[data-go]").forEach((el) => el.setAttribute("tabindex", "0"));
     const navKey = NAV[page] || (pages[page] ? page : "home");
     document.querySelectorAll(".nav a, .sheet a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === "#" + navKey ? "page" : "false"));
     const tab = ["home", "games", "standings", "stats"].includes(navKey) ? navKey : "more";
     document.querySelectorAll("[data-tab-for]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.tabFor === tab));
     closeSheet();
-    document.title = page && page !== "home" && pages[page] ? `${page[0].toUpperCase() + page.slice(1)} · ${L.name}` : L.name;
+    document.title = pageTitle(page, arg);
   }
   let lastHash = location.hash;
   window.addEventListener("hashchange", () => {
@@ -1052,6 +1080,10 @@
     if (ttab) { store.set("teamTab", ttab.dataset.teamtab); route(); return; }
     if (e.target.closest("[data-back]")) { history.length > 1 ? history.back() : (location.hash = "#home"); }
   });
+  document.addEventListener("keydown", (e) => {
+    const row = e.key === "Enter" && e.target.closest && e.target.closest("tr[data-go]");
+    if (row && e.target === row) location.hash = row.dataset.go;
+  });
   document.addEventListener("submit", (e) => {
     const f = e.target;
     if (f.matches("[data-signup]")) { e.preventDefault(); if (f.reportValidity()) sendSignup(f); }
@@ -1081,7 +1113,7 @@
   const saved = store.get("theme", null);
   if (saved) document.documentElement.dataset.theme = saved;
   const switchTheme = () => {
-    const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const dark = document.documentElement.dataset.theme === "dark";   // white unless someone chose dark
     document.documentElement.dataset.theme = dark ? "light" : "dark";
     store.set("theme", dark ? "light" : "dark");
   };

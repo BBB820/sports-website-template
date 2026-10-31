@@ -193,7 +193,10 @@ async function build() {
     const game = { date: localTime(g.startsAt), home: g.home.name, away: g.away.name };
     if (g.playoffRound != null) game.playoff = { round: g.playoffRound, slot: g.playoffSlot, stage: g.stage || null };
     if (g.venue) game.venue = g.venue;
-    if (g.status === "live") game.live = [g.homeScore, g.awayScore];
+    // "Live" only counts near the game's own time. A game switched to live days ahead (a test) or left live for a day
+    // is shown as the scheduled or finished game it really is, not as a score that fans would think is on right now.
+    const sinceStart = Date.now() - new Date(g.startsAt).getTime();
+    if (g.status === "live" && sinceStart > -2 * 3600 * 1000 && sinceStart < 8 * 3600 * 1000) game.live = [g.homeScore, g.awayScore];
     const d = byId[g.id];
     if (g.status === "final" && d) {
       game.score = [g.homeScore, g.awayScore];
