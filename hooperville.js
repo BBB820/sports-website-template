@@ -4,14 +4,14 @@
 // Settings (Railway → the service → Variables):
 //   HOOPERVILLE_URL  where Hooperville lives. Default https://hoopr.id, with the old Railway address
 //                    as a backup when hoopr.id does not answer.
-//   LEAGUE_SLUG      the league's address in Hooperville (the part after /l/). If unset, the first
-//                    league whose name contains "cubao" is used.
+//   LEAGUE_SLUG      the league's address in Hooperville (the part after /l/). Default bro-league;
+//                    if that is missing, the first league whose name contains "bro".
 
 const OLD_ADDRESS = "https://web-production-69499.up.railway.app";
 const ADDRESSES = [...new Set([process.env.HOOPERVILLE_URL, "https://hoopr.id", OLD_ADDRESS]
   .filter(Boolean).map((u) => u.replace(/\/+$/, "")))];
 let BASE = ADDRESSES[0];
-const SLUG = process.env.LEAGUE_SLUG || "";
+const SLUG = process.env.LEAGUE_SLUG || "bro-league";
 const CACHE_MS = 2 * 60 * 1000;
 const TIMEZONE = "Asia/Manila";
 
@@ -95,8 +95,8 @@ async function connect() {
 }
 
 async function findSlug(leagues) {
-  if (SLUG) return SLUG;
-  const match = leagues.find((l) => /cubao/i.test(l.name));
+  if (leagues.some((l) => l.slug === SLUG)) return SLUG;
+  const match = leagues.find((l) => /\bbro\b/i.test(l.name));
   return match ? match.slug : null;
 }
 

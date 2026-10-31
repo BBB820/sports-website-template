@@ -1,6 +1,6 @@
-# Cubao Baller Club
+# Bro League
 
-The website for the Cubao Baller Club basketball league, in an NBA.com style: black masthead with a score strip, team-colour banners, tall condensed capitals. Light mode is NBA.com, dark mode is the NBA app.
+The website for the Bro League basketball league (Quezon City), in an NBA.com style: black masthead with a score strip, team-colour banners, tall condensed capitals. Light mode is NBA.com, dark mode is the NBA app.
 
 - **Home**: a sliding banner (the league and Game of the Week, last week's closest game, the scoring leader, first place, the latest news; add photos with `photos` in `data.js`), league numbers, last week's scores, this week's games, league leaders, standings, teams, news
 - **Games**: every game by week, upcoming and results
@@ -23,7 +23,7 @@ Settings, in Railway under the service's **Variables**:
 
 | Variable | What it does | Default |
 |---|---|---|
-| `LEAGUE_SLUG` | The league's address in Hooperville, the part after `/l/` | the first league whose name contains "cubao" |
+| `LEAGUE_SLUG` | The league's address in Hooperville, the part after `/l/` | `bro-league` |
 | `HOOPERVILLE_URL` | Where Hooperville lives | `https://hoopr.id`, falling back to the old `https://web-production-69499.up.railway.app` if hoopr.id does not answer |
 
 Playoffs come through too: the bracket, series results, champion and Finals MVP, plus Season MVP (best efficiency per game) and Defensive Player (most steals plus blocks per game). Playoff games are kept out of standings and season stats, as Hooperville does. The league's name, and its logo and team logos when Hooperville has them, come from Hooperville. The colour, tagline, venue and email come from `data.js`.

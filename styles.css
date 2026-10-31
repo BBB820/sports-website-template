@@ -1,4 +1,4 @@
-/* Cubao Ballers Club league site. Modern NBA feel: black masthead with a slim score strip,
+/* Bro League site. Modern NBA feel: black masthead with a slim score strip,
    team-colour banners, condensed capitals for headlines and numbers, and plenty of room.
    Light is the default; dark follows the device or the ◐ button. */
 :root {
@@ -138,6 +138,7 @@ a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32
 .slide.custom.photo { background: linear-gradient(90deg, rgb(0 0 0 / .72), rgb(0 0 0 / .3) 55%, rgb(0 0 0 / .05)), linear-gradient(0deg, rgb(0 0 0 / .45), transparent 40%), var(--photo) var(--pos, center) / cover no-repeat, var(--depth); }
 .slide .big a:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
 .slide.photo .big span, .slide.photo h1 span { color: var(--team); }
+.slide.dark-bg .big span, .slide.dark-bg h1 span { color: #ffd666; }
 .slide.champ-slide { position: relative; overflow: hidden; }
 .slide.champ-slide.photo { background: linear-gradient(90deg, rgb(0 0 0 / .72), rgb(0 0 0 / .25) 60%, rgb(0 0 0 / .1)), var(--photo) center / cover no-repeat, var(--depth); }
 .slide.champ-slide h1 span { color: #ffd666; }

@@ -377,9 +377,8 @@
   }
   // Game of the Week (or the next playoff game) on a slide of its own.
   function gotwSlide(g) {
-    const nick = (t) => t.split(" ").slice(-1)[0];
     return { c: TEAMS[g.home].color, body: `<div class="hero-copy"><span class="label">${g.playoff ? esc(stageOf(g)) : `Game of the week · ${esc(stageOf(g))}`}</span>
-      <h2 class="big">${esc(nick(g.home))} <span>vs ${esc(nick(g.away))}</span></h2>
+      <h2 class="big${(g.home + g.away).length > 20 ? " long" : ""}">${esc(g.home)} <span>vs ${esc(g.away)}</span></h2>
       <p class="meta">${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(L.venue)}</p>
       <a class="hero-link phone-only" href="#game/${g.id}">Game preview →</a></div>${featurePanel(g)}` };
   }
@@ -402,7 +401,9 @@
   function hero(slides) {
     const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom || slides[i].noPool ? "" : POOL[i % POOL.length]);
     const pos = (f) => (f ? `;--pos:${+f.x || 0}% ${+f.y || 0}%` : "");
-    const bg = (i) => `${slides[i].cls ? " " + slides[i].cls : ""}${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
+    // Very dark team colours (near-black) need light words for the second, normally black, half of a headline.
+    const dark = (c) => { const m = /^#?([0-9a-f]{6})$/i.exec(c || ""); if (!m) return false; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 70; };
+    const bg = (i) => `${dark(slides[i].c) ? " dark-bg" : ""}${slides[i].cls ? " " + slides[i].cls : ""}${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
     const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("");
     const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
       ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
@@ -582,7 +583,7 @@
     const blob = new Blob(["\ufeff" + rows.map((r) => r.map(q).join(",")).join("\r\n")], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `cubao-signups-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `bro-league-signups-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
@@ -1022,7 +1023,7 @@
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
     : `<span class="src">Sample data · live stats appear once the league is on hoopr.id</span>`;
-  document.getElementById("footer").innerHTML = `<div class="in"><span>${esc(L.name)} · ${esc(L.venue)} · Since ${esc(L.founded)}</span>${src}<a href="mailto:${esc(L.email)}">${esc(L.email)}</a></div>`;
+  document.getElementById("footer").innerHTML = `<div class="in"><span>${[L.name, L.city, L.founded && "Since " + L.founded].filter(Boolean).map(esc).join(" · ")}</span>${src}${L.email ? `<a href="mailto:${esc(L.email)}">${esc(L.email)}</a>` : ""}</div>`;
 
   const saved = store.get("theme", null);
   if (saved) document.documentElement.dataset.theme = saved;

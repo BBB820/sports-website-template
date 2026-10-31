@@ -2,16 +2,17 @@
 // The teams, players, schedule and results below are SAMPLE data (the Hooperville Trial League teams).
 window.SITE = {
   league: {
-    name: "Cubao Ballers Club",
-    short: "CBC",
-    color: "#ff6f00",
+    // Bro League's colours from Hooperville: black, with gold as the accent.
+    name: "Bro League",
+    short: "BRO",
+    color: "#d4a017",
     logo: "🏀",
-    tagline: "Saturday night basketball in Cubao, Quezon City.",
-    season: "Season 2026",
+    tagline: "Quezon City's Bro League. Every score, stat and playoff game.",
+    season: "Season 7",
     city: "Quezon City",
-    venue: "Cubao Covered Court",
-    founded: 2024,
-    email: "cubaoballerclub@example.com",
+    venue: "Hoop Spirit",
+    founded: "",
+    email: "",
     // Pictures behind the Home banner slides (one per slide, in turn) and the news stories, plus the one
     // behind the first slide once a champion is crowned. Put the files in the photos folder and list them,
     // e.g. "photos/finals.jpg". Empty means plain team colours; if one can't load, the team colour shows.
