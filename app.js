@@ -18,12 +18,65 @@
   teamNames.forEach((t) => { if (PIC.teams && PIC.teams[t]) TEAMS[t].img = PIC.teams[t]; });
   const short = (team) => TEAMS[team]?.short || team.slice(0, 3).toUpperCase();
   const byShort = Object.fromEntries(teamNames.map((t) => [short(t), t]));
+  // A team's logo: the league's own picture when there is one, else a designed crest.
   const logo = (name, size = "sm") => {
-    const t = TEAMS[name] || { color: L.color, logo: L.logo, img: L.img };
-    const inner = t.img ? `<img src="${esc(t.img)}" alt="">` : esc(t.logo);
-    return `<span class="logo ${size}${t.img ? " pic" : ""}" style="--c:${esc(t.color)}" aria-hidden="true">${inner}</span>`;
+    const t = TEAMS[name], img = t ? t.img : L.img;
+    if (img) return `<span class="logo ${size} pic" style="--c:${esc(t ? t.color : L.color)}" aria-hidden="true"><img src="${esc(img)}" alt=""></span>`;
+    return `<span class="logo ${size} crest" aria-hidden="true">${t ? crest(name) : leagueCrest()}</span>`;
   };
+
+  // ---------- crests: badges drawn from each team's colour and initials, until real logos are added ----------
+  const hexParts = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0x888888; return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const toHex = (r) => "#" + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+  const shade = (hex, to, k) => toHex(hexParts(hex).map((v) => v + ((to - v) * k)));
+  const bright = (hex) => { const [r, g, b] = hexParts(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+  // One to three letters: the initials of the first two words ("Electro Lab" → EL), or the whole name when it is short.
+  const MONO = (() => {
+    const base = Object.fromEntries(teamNames.map((t) => {
+      const w = t.replace(/[^A-Za-z0-9 .]/g, "").split(/[\s.]+/).filter(Boolean);
+      return [t, (w.length === 1 ? (w[0].length <= 3 ? w[0] : w[0][0]) : w.slice(0, 2).map((x) => x[0]).join("")).toUpperCase()];
+    }));
+    const count = {};
+    Object.values(base).forEach((m) => (count[m] = (count[m] || 0) + 1));
+    return Object.fromEntries(teamNames.map((t) => [t, count[base[t]] > 1 ? short(t) : base[t]]));
+  })();
+  const CREST_ORDER = [...teamNames].sort();
+  const crestCache = {};
+  function crest(name) {
+    if (crestCache[name]) return crestCache[name];
+    const p = TEAMS[name].color, light = bright(p) > 0.62, dark = bright(p) < 0.16;
+    const ink = light ? "#111418" : "#ffffff";                     // letters and trim
+    const trim = dark ? L.color : ink;                              // near-black teams get the league's gold trim
+    const deep = shade(p, 0, 0.38), glow = shade(p, 255, 0.22);
+    const m = MONO[name], size = m.length === 1 ? 56 : m.length === 2 ? 46 : 34;
+    const text = (y, fill = dark ? L.color : ink, k = 1) => `<text x="50" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${fill}" style="font-family:var(--display);font-weight:800;font-size:${Math.round(size * k)}px;letter-spacing:.5px"${m.length === 3 ? ' textLength="58" lengthAdjust="spacingAndGlyphs"' : ""}>${esc(m)}</text>`;
+    const shape = CREST_ORDER.indexOf(name) % 5;
+    let svg;
+    if (shape === 0) svg = `<circle cx="50" cy="50" r="48" fill="${p}"/><g transform="rotate(-16 50 50)"><polygon points="5.6,62 94.4,62 89.2,75 10.8,75" fill="${trim}"/><polygon points="10.8,75 89.2,75 83,83 17,83" fill="${deep}"/></g>${text(42)}<circle cx="50" cy="50" r="45" fill="none" stroke="${trim}" stroke-width="3"/>`;
+    else if (shape === 1) svg = `<path d="M50 3 L91 15 V50 C91 75 72 90 50 98 C28 90 9 75 9 50 V15 Z" fill="${p}"/><path d="M9 15 L50 3 L91 15 V34 H9 Z" fill="${deep}"/><path d="M50 9 L85 19 V50 C85 71 69 84 50 91 C31 84 15 71 15 50 V19 Z" fill="none" stroke="${trim}" stroke-width="3"/>${text(62)}`;
+    else if (shape === 2) svg = `<circle cx="50" cy="50" r="48" fill="${p}"/><path d="M4.75 68 A48 48 0 0 0 95.25 68 Z" fill="${deep}"/><circle cx="50" cy="50" r="42" fill="none" stroke="${trim}" stroke-width="4"/>${text(42)}`;
+    else if (shape === 3) svg = `<polygon points="50,2 92,26 92,74 50,98 8,74 8,26" fill="${p}"/><polygon points="50,12 83,31 83,69 50,88 17,69 17,31" fill="${deep}"/><polygon points="50,12 83,31 83,69 50,88 17,69 17,31" fill="none" stroke="${dark ? L.color : "#fff"}" stroke-width="3"/>${text(51, dark ? L.color : "#fff")}`;
+    else svg = `<circle cx="50" cy="50" r="48" fill="${p}"/><circle cx="50" cy="50" r="40" fill="none" stroke="${trim}" stroke-width="5"/><polygon points="50,13 53,21 62,21 55,26 58,34 50,29 42,34 45,26 38,21 47,21" fill="${trim}"/>${text(61, undefined, 0.86)}`;
+    return (crestCache[name] = `<svg viewBox="0 0 100 100" focusable="false">${svg}</svg>`);
+  }
+  document.documentElement.style.setProperty("--on-team", bright(L.color) > 0.6 ? "#111418" : "#fff");
+  // The league's own mark: black disc, gold ring, BRO in gold.
+  function leagueCrest() {
+    const g = L.color, mark = (L.short || L.name.slice(0, 3)).toUpperCase().slice(0, 3);
+    return `<svg viewBox="0 0 100 100" focusable="false"><circle cx="50" cy="50" r="48" fill="#0b0b0d"/><circle cx="50" cy="50" r="43" fill="none" stroke="${g}" stroke-width="5"/>
+      <path d="M50 7 V93 M7 50 H93" stroke="${g}" stroke-width="1.6" opacity=".28"/><path d="M20 20 C40 38 40 62 20 80 M80 20 C60 38 60 62 80 80" fill="none" stroke="${g}" stroke-width="1.6" opacity=".28"/>
+      <text x="50" y="52" text-anchor="middle" dominant-baseline="central" fill="${g}" style="font-family:var(--display);font-weight:800;font-size:${mark.length > 2 ? 33 : 42}px;letter-spacing:1px">${esc(mark)}</text></svg>`;
+  }
   document.documentElement.style.setProperty("--team", L.color);
+  // Logos the organisers upload win over Hooperville's and over the designed badges.
+  const baseImg = Object.fromEntries(teamNames.map((t) => [t, TEAMS[t].img]));
+  const baseLeagueImg = L.img;
+  function applyLogos() {
+    const c = S.content || {};
+    teamNames.forEach((t) => { TEAMS[t].img = (c.logos && c.logos[t]) || baseImg[t]; });
+    L.img = c.leagueLogo || baseLeagueImg;
+  }
+  applyLogos();
 
   // ---------- seeded random (sample numbers stay the same on every visit) ----------
   const seedOf = (str) => { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
@@ -206,7 +259,7 @@
     return `<div class="card board-list"><div class="bl-head"><span class="label">${label}</span><span class="label">${unit}</span></div>
       ${list.map((s, i) => `<a class="bl-row${i === 0 ? " first" : ""}" href="${plink(s.p)}">
         <span class="rk">${i + 1}</span>${i === 0 && !compact ? avatar(s.p) : logo(s.p.team)}
-        <span class="nm">${esc(s.p.name)}<small>${esc(short(s.p.team))} · #${esc(s.p.no)} · ${esc(s.p.pos)}</small></span>
+        <span class="nm">${esc(s.p.name)}<small>${[short(s.p.team), s.p.no !== "" && "#" + s.p.no, s.p.pos].filter(Boolean).map(esc).join(" · ")}</small></span>
         <span class="num">${avg(s.t[key], s.gp)}</span></a>`).join("")}</div>`;
   }
 
@@ -263,7 +316,7 @@
       const ph = pic ? ` photo${n.article ? " own" : ""}" style="--photo:${bgUrl(pic)};${n.focus ? `--pos:${+n.focus.x}% ${+n.focus.y}%;` : ""}` : `" style="`;
       const art = g
         ? `<div class="art${ph}--c:${esc(TEAMS[winner(g)].color)}"><span class="vsart">${logo(g.home, "md")}<b class="num">${g.score[0]}–${g.score[1]}</b>${logo(g.away, "md")}</span></div>`
-        : `<div class="art${ph}"><span class="big-logo">${pic ? "" : esc(L.logo)}</span></div>`;
+        : `<div class="art${ph}"><span class="big-logo">${pic ? "" : logo(null, "lg")}</span></div>`;
       const inner = `${art}<div class="story"><div class="row"><span class="chip">${esc(n.tag)}</span><span class="label">${esc(day(n.date))}</span></div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div>`;
       const href = n.article ? `#article/${esc(n.article)}` : g ? `#game/${g.id}` : "";
       return href ? `<a class="card ncard" href="${href}">${inner}</a>` : `<div class="card ncard">${inner}</div>`;
@@ -739,7 +792,7 @@
               ${p.captain ? `<span class="chip cap">Captain</span>` : ""}
               <span class="jersey">${esc(p.no)}${avatar(p)}</span>
               <span class="nm"><small>${esc(first)}</small>${esc(last)}</span>
-              <span class="label">${esc(p.pos)}${p.ht ? ` · ${p.ht} cm` : ""}</span>
+              <span class="label">${[p.pos, p.ht && p.ht + " cm"].filter(Boolean).map(esc).join(" · ")}</span>
               <div class="mini"><div><b class="num">${avg(s.t.pts, s.gp)}</b><span class="label">PPG</span></div><div><b class="num">${avg(s.t.reb, s.gp)}</b><span class="label">RPG</span></div><div><b class="num">${avg(s.t.ast, s.gp)}</b><span class="label">APG</span></div></div>
             </a>`;
           }).join("")}</section>`;
@@ -842,7 +895,7 @@
       const [first, last] = nameParts(p.name);
       const six = [["PPG", avg(t.pts, s.gp)], ["RPG", avg(t.reb, s.gp)], ["APG", avg(t.ast, s.gp)], ["FG%", pct(t.fgm, t.fga)], ["3P%", pct(t.tpm, t.tpa)], ["MIN", avg(t.min, s.gp)]];
       return `<section class="player-top band" style="--team:${esc(TEAMS[p.team].color)}"><button class="back" data-back aria-label="Back">←</button>${p.photo ? `<span class="player-photo"><img src="${esc(p.photo)}" alt="${esc(p.name)}"><b class="num">${esc(p.no)}</b></span>` : `<span class="jersey" aria-hidden="true">${esc(p.no)}</span>`}
-          <div><a class="label" href="${tlink(p.team)}">${esc(p.team)} · ${esc(p.pos)}${p.ht ? ` · ${p.ht} cm` : ""}${p.captain ? " · Captain" : ""}</a>
+          <div><a class="label" href="${tlink(p.team)}">${[p.team, p.pos, p.ht && p.ht + " cm", p.captain && "Captain"].filter(Boolean).map(esc).join(" · ")}</a>
             <h1><small>${esc(first)}</small>${esc(last)}</h1></div></section>
         <section class="scoreboard">${six.map(([l, v]) => `<div><span class="label">${l}</span><b class="num">${v}</b></div>`).join("")}</section>
         <section>${sh("Game log", null, L.season)}
@@ -1035,7 +1088,7 @@
   document.querySelectorAll(".theme, .sheet-theme").forEach((b) => b.addEventListener("click", switchTheme));
 
   // What the editor needs from here: the games, teams and players to link to, and a way to redraw.
-  window.CBC = { S, L, ALL, TEAMS, teamNames, PLAYERS, gameKey, stageOf, short, day, esc, route, memo, field, sh, logo,
+  window.CBC = { S, L, ALL, TEAMS, teamNames, PLAYERS, gameKey, stageOf, short, day, esc, route, memo, field, sh, logo, applyLogos,
     played: (g) => g.played };
 
   route();

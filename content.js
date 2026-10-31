@@ -10,7 +10,7 @@ const FILE = path.join(DIR, "content.json");
 const UPLOADS = path.join(DIR, "uploads");
 const AUTO = ["league", "gotw", "closest", "leader", "standings", "news"];
 const LINKS = ["none", "article", "album", "game", "team", "player", "signup", "url"];
-const EMPTY = () => ({ slides: AUTO.map((auto) => ({ auto, on: true })), articles: [], albums: [] });
+const EMPTY = () => ({ slides: AUTO.map((auto) => ({ auto, on: true })), articles: [], albums: [], logos: {}, leagueLogo: "" });
 
 // ---------- checking what is saved ----------
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -41,6 +41,13 @@ const album = (a) => ({ id: id(a && a.id), published: !!(a && a.published), titl
   date: day(a && a.date) || new Date().toISOString().slice(0, 10), game: oneLine(a && a.game, 200),
   photos: (Array.isArray(a && a.photos) ? a.photos : []).slice(0, 200).map((p) => ({ src: image(p && p.src), caption: oneLine(p && p.caption, 200) })).filter((p) => p.src) });
 
+// Team name → uploaded logo picture.
+function logos(m) {
+  const out = {};
+  if (m && typeof m === "object") for (const [k, v] of Object.entries(m).slice(0, 80)) { const name = oneLine(k, 60), src = image(v); if (name && src) out[name] = src; }
+  return out;
+}
+
 function clean(doc) {
   if (!doc || typeof doc !== "object") throw new InputError("Nothing was sent");
   const slides = (Array.isArray(doc.slides) ? doc.slides : []).slice(0, 40).map(slide);
@@ -54,7 +61,9 @@ function clean(doc) {
   return {
     slides: slides.filter((s) => (s.auto ? (seen.has(s.auto) ? false : seen.add(s.auto)) : s.headline || s.image)),
     articles: (Array.isArray(doc.articles) ? doc.articles : []).slice(0, 500).map(article).filter((a) => a.title),
-    albums: (Array.isArray(doc.albums) ? doc.albums : []).slice(0, 200).map(album).filter((a) => a.title)
+    albums: (Array.isArray(doc.albums) ? doc.albums : []).slice(0, 200).map(album).filter((a) => a.title),
+    logos: logos(doc.logos),
+    leagueLogo: image(doc.leagueLogo)
   };
 }
 
@@ -81,7 +90,7 @@ function check(given) {
 /** What visitors see: switched-on slides, published articles and albums. */
 async function published() {
   const doc = await read();
-  return { slides: doc.slides.filter((s) => s.on), articles: doc.articles.filter((a) => a.published), albums: doc.albums.filter((a) => a.published && a.photos.length) };
+  return { slides: doc.slides.filter((s) => s.on), articles: doc.articles.filter((a) => a.published), albums: doc.albums.filter((a) => a.published && a.photos.length), logos: doc.logos, leagueLogo: doc.leagueLogo };
 }
 async function all(given) { check(given); return { persistent, ...(await read()) }; }
 async function save(given, body) { check(given); return { persistent, ...(await write(clean(body))) }; }

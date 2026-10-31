@@ -29,9 +29,10 @@
   }
   function take(out) {
     persistent = out.persistent;
-    doc = { slides: out.slides, articles: out.articles, albums: out.albums };
+    doc = { slides: out.slides, articles: out.articles, albums: out.albums, logos: out.logos || {}, leagueLogo: out.leagueLogo || "" };
     // What visitors see, so the public pages show the change straight away.
-    S.content = { slides: doc.slides.filter((s) => s.on), articles: doc.articles.filter((a) => a.published), albums: doc.albums.filter((a) => a.published && a.photos.length) };
+    S.content = { slides: doc.slides.filter((s) => s.on), articles: doc.articles.filter((a) => a.published), albums: doc.albums.filter((a) => a.published && a.photos.length), logos: doc.logos, leagueLogo: doc.leagueLogo };
+    window.CBC.applyLogos();
   }
   async function save(msg) {
     take(await api("PUT", "/api/admin/content", doc));
@@ -39,18 +40,20 @@
   }
 
   // Photos are shrunk on the phone before sending: at most 2000 px on the long side, as JPEG.
-  async function shrink(file, max = 2000) {
+  async function shrink(file, max = 2000, png = false) {
     const img = await createImageBitmap(file).catch(() => null);
     if (!img) throw new Error("That file is not a picture this browser can read. Try a JPEG or PNG.");
     const k = Math.min(1, max / Math.max(img.width, img.height));
     const c = document.createElement("canvas");
     c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
     const g = c.getContext("2d");
-    g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+    if (!png) { g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); }
     g.drawImage(img, 0, 0, c.width, c.height);
-    return new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.84));
+    return new Promise((ok) => (png ? c.toBlob(ok, "image/png") : c.toBlob(ok, "image/jpeg", 0.84)));
   }
   const upload = async (file) => (await api("POST", "/api/admin/upload", await shrink(file), "image/jpeg")).src;
+  // Logos keep their see-through background, at a size that stays sharp on a phone.
+  const uploadLogoFile = async (file) => (await api("POST", "/api/admin/upload", await shrink(file, 512, true), "image/png")).src;
 
   // ---------- small pieces ----------
   const opts = (list, cur) => list.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
@@ -75,10 +78,10 @@
   function render() {
     const b = box();
     if (!b) return;
-    const tabs = [["slides", "Slideshow"], ["articles", "Articles"], ["albums", "Photos"]];
+    const tabs = [["slides", "Slideshow"], ["articles", "Articles"], ["albums", "Photos"], ["logos", "Logos"]];
     b.innerHTML = `${persistent ? "" : `<p class="card warn">Saved work and pictures are not on a storage disk yet, so they are lost whenever the website redeploys. Add a Volume to the service on Railway.</p>`}
       ${editing ? "" : `<div class="seg ad-tabs" role="tablist">${tabs.map(([v, l]) => `<button role="tab" aria-selected="${v === tab}" data-atab="${v}">${l}</button>`).join("")}</div>${flash()}`}
-      ${editing ? form() : tab === "slides" ? slideList() : tab === "articles" ? articleList() : albumList()}
+      ${editing ? form() : tab === "slides" ? slideList() : tab === "articles" ? articleList() : tab === "logos" ? logoList() : albumList()}
       ${editing ? "" : `<p class="note">Also for organisers: <a href="#signups">sign-ups list</a> · <a href="#home">see the home page</a></p>`}`;
     note = "";
   }
@@ -105,6 +108,35 @@
       <button type="button" class="btn" data-new="article">+ New article</button></div>
       ${rows ? `<div class="card ad-list">${rows}</div>` : `<p class="card empty">No articles yet.</p>`}`;
   }
+  function logoList() {
+    const row = (key, name, label) => {
+      const mine = key === "__league" ? doc.leagueLogo : doc.logos[key];
+      return `<div class="ad-row"><span class="ad-thumb logo-thumb">${logo(key === "__league" ? null : key, "md")}</span>
+        <div class="ad-txt"><b>${esc(name)}</b><small>${mine ? "Your logo" : label}</small></div>
+        <label class="btn ghost ad-up">${mine ? "Change" : "Upload"}<input type="file" accept="image/*" data-logo="${esc(key)}" hidden></label>
+        ${mine ? `<button type="button" class="link" data-logo-reset="${esc(key)}">Use badge</button>` : "<span></span>"}</div>`;
+    };
+    return `<div class="ad-head"><p class="note">Each team's logo, shown next to its name everywhere on the site. Until you upload one, it gets a badge drawn in its colours. A square picture works best, and a see-through background is fine.</p></div>
+      <p class="up-status" role="status"></p>
+      <div class="card ad-list">${row("__league", L_NAME, "Designed badge")}${teamNames.map((t) => row(t, t, "Designed badge")).join("")}</div>`;
+  }
+  const L_NAME = window.CBC.L.name + " (the site's logo)";
+
+  async function uploadLogo(key, file) {
+    if (!file) return;
+    const before = { logos: { ...doc.logos }, leagueLogo: doc.leagueLogo };
+    try {
+      status("Uploading…");
+      const src = await uploadLogoFile(file);
+      if (key === "__league") doc.leagueLogo = src; else doc.logos[key] = src;
+      await save("Logo saved. It shows on the whole site now.");
+      render();
+    } catch (e) { doc.logos = before.logos; doc.leagueLogo = before.leagueLogo; status(e.message); if (e.status === 403) lock(e.message); }
+  }
+  function resetLogo(key) {
+    quick(() => { if (key === "__league") doc.leagueLogo = ""; else delete doc.logos[key]; }, "Back to the designed badge.");
+  }
+
   function albumList() {
     const rows = doc.albums.map((a, i) => `<div class="ad-row${a.published && a.photos.length ? "" : " off"}">${a.photos[0] ? `<span class="ad-thumb"><img src="${esc(a.photos[0].src)}" alt=""></span>` : `<span class="ad-thumb auto">📷</span>`}
       <div class="ad-txt"><b>${esc(a.title)}</b><small>${a.photos.length} photo${a.photos.length === 1 ? "" : "s"} · ${a.published && a.photos.length ? "On the site" : "Not on the site"}</small></div>
@@ -258,6 +290,7 @@
     const t = e.target;
     if (editing && t.dataset.f) { setField(t.dataset.f, t.type === "checkbox" ? t.checked : t.value); if (t.dataset.f === "link.type") { editing.item.link = { type: t.value }; render(); } }
     if (editing && t.dataset.upload) uploadFiles(t.dataset.upload, t.files);
+    if (t.dataset.logo) uploadLogo(t.dataset.logo, t.files[0]);
     if (t.dataset.slideOn != null) { const i = +t.dataset.slideOn; quick(() => (doc.slides[i].on = t.checked), t.checked ? "Switched on." : "Switched off."); }
   });
   document.addEventListener("click", (e) => {
@@ -266,6 +299,7 @@
     const q = (sel) => e.target.closest(sel);
     let x;
     if ((x = q("[data-atab]"))) { tab = x.dataset.atab; render(); }
+    else if ((x = q("[data-logo-reset]"))) resetLogo(x.dataset.logoReset);
     else if ((x = q("[data-new]"))) startEdit(x.dataset.new);
     else if ((x = q("[data-edit]"))) startEdit(x.dataset.edit, +x.dataset.i);
     else if (q("[data-cancel]")) { editing = null; render(); }

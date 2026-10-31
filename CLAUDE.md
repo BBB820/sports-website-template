@@ -41,7 +41,7 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   the organisers' page is `/#signups` (not linked anywhere). Contact details must never appear on a public page.
 - `content.js` stores what the organisers write in `content.json` (same folder) and their pictures in `uploads/`:
   slideshow order (automatic slides `league`, `closest`, `leader`, `standings`, `news` mixed with their own picture
-  slides, each with on/off, link and show-from/until dates), articles (`#article/ID`) and photo albums (`#photos`,
+  slides, each with on/off, link and show-from/until dates; `logos` = team name to uploaded logo, `leagueLogo`), articles (`#article/ID`) and photo albums (`#photos`,
   `#album/ID`, full-screen viewer). Public: `GET /api/content` (switched-on and published only). Private, header
   `x-passcode` = `SIGNUP_PASSCODE`: `GET`/`PUT /api/admin/content`, `POST /api/admin/upload` (JPEG/PNG/WebP, checked
   by first bytes; the editor shrinks photos to 2000px JPEG on the phone first). The editor is `/#admin` (`admin.js`,
@@ -57,6 +57,22 @@ photos from `league.photos` in `data.js` go behind the slides), this
 week's games, standings beside last week's results, league leader tiles, news. On phones a bottom tab bar
 (Home, Games, Standings, Stats, More) replaces the top menu, Home rows swipe sideways, and table name
 columns stay pinned. The owner rejected both a busier version and a plainer one; keep to this middle.
+
+### Type, colour and logos (Oct 2026 pass, "NBA feel")
+
+- Fonts: Barlow Condensed (600/700/800) for headlines, scores, numbers, team names and the nav; Roboto for body text,
+  small labels, table headers, tabs and form text (small caps in the condensed face were hard to read).
+- Hierarchy: page title (`.phead h1`) about 3.6rem max; section headers (`.sh h2`) 1.6rem with a gold bar and a hairline; card
+  titles 1.2-1.4rem; small labels 0.7rem Roboto uppercase. Keep the accent for bars, underlines and buttons only.
+- Accent as text on white must use `--team-ink` (a darkened accent), never `--team` (gold on white fails contrast);
+  `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners darken the
+  team colour (`--depth`) so white text stays readable on light team colours (mint, gold, grey).
+- Do not reuse the class name `link` for new things: table rows are `tr.link`; the text-button style is scoped to `button.link, a.link`.
+- Team logos (`logo()` in `app.js`): an uploaded picture if there is one (Hooperville's `img`, `pictures.teams` in `data.js`, or the
+  editor's Logos tab, in that increasing priority), else a designed SVG crest: the team colour plus a monogram (initials of the
+  first two words, the whole name if 3 letters or fewer, the 3-letter code if two teams would share a monogram) on one of five
+  shapes assigned by the team's alphabetical position, so neighbours differ. The league's own mark is `leagueCrest()`
+  (black disc, gold ring, `L.short`). Hooperville currently has no team logos or player photos.
 
 ## Testing
 
