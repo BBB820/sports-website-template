@@ -69,10 +69,15 @@ columns stay pinned. The owner rejected both a busier version and a plainer one;
   team colour (`--depth`) so white text stays readable on light team colours (mint, gold, grey).
 - Do not reuse the class name `link` for new things: table rows are `tr.link`; the text-button style is scoped to `button.link, a.link`.
 - Team logos (`logo()` in `app.js`): an uploaded picture if there is one (Hooperville's `img`, `pictures.teams` in `data.js`, or the
-  editor's Logos tab, in that increasing priority), else a designed SVG crest: the team colour plus a monogram (initials of the
+  editor's Logos tab, in that increasing priority; Hooperville's come in as `img` from `/api/team-logos`), else a designed SVG crest: the team colour plus a monogram (initials of the
   first two words, the whole name if 3 letters or fewer, the 3-letter code if two teams would share a monogram) on one of five
   shapes assigned by the team's alphabetical position, so neighbours differ. The league's own mark is `leagueCrest()`
-  (black disc, gold ring, `L.short`). Hooperville currently has no team logos or player photos.
+  (black disc, gold ring, `L.short`). Hooperville DOES have team logos, but not in the team objects: `GET /api/team-logos` returns
+  `{ teamId: "/api/teams/<id>/logo?v=…" }`, and a league's logo is the static file `/logos/<slug>.webp` (the front end
+  hard-codes which leagues have one). `hooperville.js` reads both and `server.js` serves them as `/hv-logo/<teamId|league>`
+  (raster images only, cached six hours in memory, last copy kept if Hooperville is down), so the site data carries
+  `/hv-logo/…` addresses. Logos are 256px squares and fill the round badge (`object-fit: cover`). The crests remain for any
+  team without a logo. Hooperville has no player photos.
 
 ## Testing
 

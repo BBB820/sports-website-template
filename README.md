@@ -80,7 +80,7 @@ Open **/#admin** on the live site and enter the organisers' passcode (the same o
 
 - **Slideshow**: put the home banner's slides in any order, switch any off, and add your own slides with a picture, headline, short text, a button and where it goes (an article, a photo album, a game's box score, a team, a player, the sign-up page or any web address). A slide can show only between two dates.
 - **Articles**: write stories with a picture, summary and paragraphs, linked to a game if you like. They appear on the News page and on Home.
-- **Logos**: upload a logo for each team (and the site's own logo). Until you do, each team gets a badge drawn in its colours with its initials. Pictures with a see-through background work well.
+- **Logos**: upload a logo for each team (and the site's own logo). Teams that already have a logo in Hooperville show it automatically; until you upload one, any other team gets a badge drawn in its colours with its initials. Pictures with a see-through background work well.
 - **Photos**: make albums from several photos at once, with captions. They get their own Photos page.
 
 Photos are shrunk on the phone before they are sent. Everything is kept on the Railway volume, like the sign-ups; without a volume it is lost on every redeploy (the editor warns about this).

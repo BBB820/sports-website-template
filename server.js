@@ -4,7 +4,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { siteData } = require("./hooperville.js");
+const { siteData, logoFile, hasLogos } = require("./hooperville.js");
 const signups = require("./signups.js");
 const content = require("./content.js");
 
@@ -93,6 +93,19 @@ http.createServer((req, res) => {
       res.writeHead(200, { "content-type": types[path.extname(file)], "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" });
       res.end(body);
     });
+    return;
+  }
+  if (route.startsWith("/hv-logo/")) {
+    const key = route.slice(9);
+    if (!/^([0-9a-f-]{36}|league)$/.test(key)) { res.writeHead(404, { "content-type": "text/plain" }); return res.end("Not found"); }
+    (hasLogos() ? Promise.resolve() : siteData().catch(() => {}))
+      .then(() => logoFile(key))
+      .then((f) => {
+        if (!f) { res.writeHead(404, { "content-type": "text/plain" }); return res.end("Not found"); }
+        res.writeHead(200, { "content-type": f.type, "cache-control": "public, max-age=3600", "x-content-type-options": "nosniff" });
+        res.end(f.body);
+      })
+      .catch((err) => { console.error(err.message); res.writeHead(502, { "content-type": "text/plain" }); res.end("Logo not available"); });
     return;
   }
   if (route === "/api/site-data") {

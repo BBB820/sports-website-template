@@ -39,6 +39,50 @@ function pictureOf(obj) {
   return null;
 }
 
+// Logos live apart from the team data: GET /api/team-logos gives { teamId: "/api/teams/<id>/logo?v=…" }, and a league's
+// logo is the file /logos/<slug>.webp. The site serves them itself (/hv-logo/<key>, see server.js) so they keep loading
+// when Hooperville is slow, and so a browser never has to know where Hooperville lives.
+const LOGO_SOURCES = {};
+const LOGO_TTL = 6 * 60 * 60 * 1000;
+const logoCache = new Map();
+function registerLogo(key, path) {
+  try {
+    const url = new URL(path, BASE);
+    if (url.origin !== new URL(BASE).origin) return null;
+    LOGO_SOURCES[key] = url.href;
+    return `/hv-logo/${key}?v=${encodeURIComponent(url.searchParams.get("v") || "1")}`;
+  } catch { return null; }
+}
+async function leagueLogo(slug) {
+  const path = `/logos/${encodeURIComponent(slug)}.webp`;
+  try {
+    const res = await fetch(BASE + path, { method: "HEAD", signal: AbortSignal.timeout(8000) });
+    if (res.ok && /^image\//.test(res.headers.get("content-type") || "")) return registerLogo("league", path);
+  } catch { /* no league logo */ }
+  return null;
+}
+/** A logo's picture: raster images only (never SVG, which can carry scripts), fetched once and kept for six hours. */
+async function logoFile(key) {
+  const src = LOGO_SOURCES[key];
+  if (!src) return null;
+  const hit = logoCache.get(key);
+  if (hit && hit.src === src && Date.now() - hit.at < LOGO_TTL) return hit;
+  try {
+    const res = await fetch(src, { signal: AbortSignal.timeout(15000) });
+    const type = (res.headers.get("content-type") || "").split(";")[0].trim();
+    if (!res.ok || !/^image\/(png|jpeg|webp|gif)$/.test(type)) throw new Error(`logo ${key}: ${res.status} ${type}`);
+    const body = Buffer.from(await res.arrayBuffer());
+    if (body.length > 3 * 1024 * 1024) throw new Error(`logo ${key}: too big`);
+    const entry = { src, type, body, at: Date.now() };
+    logoCache.set(key, entry);
+    return entry;
+  } catch (err) {
+    if (hit) return hit;   // Hooperville unreachable: keep showing the last copy
+    throw err;
+  }
+}
+const hasLogos = () => Object.keys(LOGO_SOURCES).length > 0;
+
 const mascot = (name) => MASCOTS.find(([re]) => re.test(name.toLowerCase())) || null;
 
 // Three letters, unique within the league: "Bayside Bulls" → BAY, "Cubao Baller Club" → CBC.
@@ -111,6 +155,7 @@ async function build() {
   const names = season.teams.map((t) => t.name);
   const codes = shortCodes(names);
   const details = await inBatches(season.teams, 4, (t) => get(`/teams/${t.id}`));
+  const logoPaths = await get("/team-logos").catch(() => ({}));
 
   const teams = {};
   season.teams.forEach((t, i) => {
@@ -118,7 +163,7 @@ async function build() {
     const members = (details[i].members || []).filter((p) => p.isPlayer);
     // Captain first, then by jersey number, as Hooperville lists them.
     members.sort((a, b) => (b.canManage - a.canManage));
-    const picture = pictureOf(t) || pictureOf(details[i]);
+    const picture = (logoPaths[t.id] && registerLogo(t.id, logoPaths[t.id])) || pictureOf(t) || pictureOf(details[i]);
     teams[t.name] = {
       ...(picture ? { img: picture } : {}),
       short: codes[t.name],
@@ -191,11 +236,11 @@ async function build() {
     };
   }
 
-  const leagueLogo = pictureOf(league);
+  const leagueLogoUrl = (await leagueLogo(slug)) || pictureOf(league);
   return {
     playoffs,
     source: { name: BASE === OLD_ADDRESS ? "Hooperville" : new URL(BASE).host, league: league.name, slug, season: season.name, url: `${BASE}/l/${slug}`, updated: new Date().toISOString() },
-    league: { name: league.name, season: season.name, city: league.location || "", ...(leagueLogo ? { img: leagueLogo } : {}) },
+    league: { name: league.name, season: season.name, city: league.location || "", ...(leagueLogoUrl ? { img: leagueLogoUrl } : {}) },
     teams,
     schedule
   };
@@ -222,4 +267,4 @@ async function siteData() {
   }
 }
 
-module.exports = { siteData };
+module.exports = { siteData, logoFile, hasLogos };
