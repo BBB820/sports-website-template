@@ -1,6 +1,11 @@
 /* Bro League site. Modern NBA feel: black masthead with a slim score strip,
    team-colour banners, condensed capitals for headlines and numbers, and plenty of room.
    Light is the default; dark follows the device or the ◐ button. */
+/* Fonts are served from this site (fonts/), so every phone gets the same ones. Latin letters, digits and punctuation. */
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/barlow-condensed-600.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/barlow-condensed-700.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 800; font-display: swap; src: url(fonts/barlow-condensed-800.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Roboto'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(fonts/roboto-var.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 :root {
   --team: #ff6f00;
   --page: #fff;
@@ -89,7 +94,7 @@ main > :first-child:not(.band) { margin-top: 48px; }
 .logo.crest.lg, .logo.crest.xl { box-shadow: none; filter: drop-shadow(0 6px 14px rgb(0 0 0 / .38)); }
 .logo.sm { width: 24px; height: 24px; font-size: .76rem; }
 .logo.md { width: 44px; height: 44px; font-size: 1.35rem; }
-.logo.lg { width: 72px; height: 72px; font-size: 2.2rem; box-shadow: 0 0 0 3px rgb(255 255 255 / .9); }
+.logo.lg { width: 60px; height: 60px; font-size: 1.8rem; box-shadow: 0 0 0 3px rgb(255 255 255 / .9); }
 .logo.xl { width: 128px; height: 128px; font-size: 3.9rem; box-shadow: 0 0 0 4px rgb(255 255 255 / .9); }
 .avatar { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--c); color: #fff; font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: .02em; }
 
@@ -98,7 +103,7 @@ a.card { transition: transform .15s, box-shadow .15s; }
 a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 16px 32px -18px rgb(15 17 21 / .25); border-color: color-mix(in srgb, var(--hair) 55%, var(--soft)); }
 
 .sh { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--hair); }
-.sh h2 { font-size: 1.6rem; line-height: 1; display: flex; align-items: center; gap: 12px; }
+.sh h2 { font-size: 1.4rem; line-height: 1; display: flex; align-items: center; gap: 12px; }
 .sh h2::before { content: ""; flex: none; width: 5px; height: 1.05em; border-radius: 2px; background: var(--team); }
 .sh a, .sh span { font-family: var(--body); font-weight: 600; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); white-space: nowrap; }
 .sh a:hover { color: var(--team-ink); }
@@ -220,14 +225,14 @@ tr[data-go]:focus-visible, .scroll:focus-visible { outline: 2px solid var(--team
 /* ── game cards ── */
 .games-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
 .games { display: grid; gap: 16px; }
-.game { display: grid; gap: 16px; padding: 20px 22px; position: relative; }
+.game { display: grid; gap: 12px; padding: 16px 18px; position: relative; }
 .game::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--c, var(--team)); }
 .game-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .teams { display: grid; gap: 12px; }
 .tline { display: flex; align-items: center; gap: 14px; }
-.tline .nm { flex: 1; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 1.25rem; text-transform: uppercase; line-height: 1.05; }
+.tline .nm { flex: 1; min-width: 0; font-family: var(--display); font-weight: 700; font-size: 1.12rem; text-transform: uppercase; line-height: 1.05; }
 .tline .nm small { display: block; font-family: var(--body); font-weight: 500; text-transform: none; font-size: .82rem; color: var(--soft); }
-.tline .pts { font-size: 2.2rem; line-height: 1; font-weight: 800; }
+.tline .pts { font-size: 1.9rem; line-height: 1; font-weight: 800; }
 .tline.lose .nm, .tline.lose .pts { color: var(--soft); }
 .game-foot { display: flex; justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1px solid var(--hair); font-family: var(--body); font-weight: 600; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); }
 .game-foot em { font-style: normal; color: var(--ink); }
@@ -248,8 +253,8 @@ a.game:hover .game-foot em { color: var(--team-ink); }
 
 /* ── leader tiles (home) & boards (stats) ── */
 .ltiles { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-.ltile { display: grid; gap: 10px; padding: 22px; }
-.ltile-val { font-size: 3.2rem; font-weight: 800; line-height: .95; }
+.ltile { display: grid; gap: 8px; padding: 16px 18px; }
+.ltile-val { font-size: 2.5rem; font-weight: 800; line-height: .95; }
 .ltile-val small { font-size: .3em; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--soft); margin-left: 6px; }
 .ltile-who { display: flex; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid var(--hair); }
 .ltile-who b { display: block; font-weight: 600; line-height: 1.2; }
@@ -257,24 +262,26 @@ a.game:hover .game-foot em { color: var(--team-ink); }
 .ltile:hover b { color: var(--team-ink); }
 
 .leaders-grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
-.leaders-grid.wide-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.leaders-grid.wide-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 .board-list { display: grid; }
-.bl-head { display: flex; justify-content: space-between; padding: 18px 20px 10px; }
+.bl-head { display: flex; justify-content: space-between; padding: 14px 16px 6px; }
 .bl-head .label:first-child { color: var(--ink); font-weight: 700; font-size: .9rem; }
-.bl-row { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--hair); }
+.bl-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--hair); }
+.bl-row .avatar { width: 34px; height: 34px; font-size: .85rem; }
 .bl-row:hover { background: var(--raise); }
 .bl-row .rk { width: 14px; font-family: var(--display); font-weight: 600; color: var(--soft); }
 .bl-row .nm { flex: 1; min-width: 0; font-weight: 600; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bl-row .nm small { display: block; font-family: var(--body); font-weight: 500; font-size: .74rem; letter-spacing: .02em; color: var(--soft); }
-.bl-row .num { font-size: 1.4rem; }
-.bl-row.first .num { font-size: 2rem; font-weight: 800; }
-.bl-row.first .nm { font-size: 1.05rem; }
+.bl-row .num { font-size: 1.15rem; }
+.bl-row.first .num { font-size: 1.6rem; font-weight: 800; }
+.bl-row .nm { font-size: .93rem; }
+.bl-row.first .nm { font-size: .98rem; }
 
 /* ── tables ── */
 .scroll { overflow-x: auto; scrollbar-width: thin; }
 table { width: 100%; border-collapse: collapse; }
-th { padding: 12px 10px; color: var(--soft); font-family: var(--body); font-weight: 700; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--hair); background: var(--card); }
-td { padding: 13px 10px; border-top: 1px solid var(--hair); text-align: center; white-space: nowrap; font-family: var(--display); font-weight: 600; font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+th { padding: 10px 10px; color: var(--soft); font-family: var(--body); font-weight: 700; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--hair); background: var(--card); }
+td { padding: 10px 10px; border-top: 1px solid var(--hair); text-align: center; white-space: nowrap; font-family: var(--display); font-weight: 600; font-size: 1rem; font-variant-numeric: tabular-nums; }
 td:first-child:not(.l) { color: var(--soft); font-weight: 500; }
 tbody tr:first-child td { border-top: 0; }
 th:first-child, td:first-child { padding-left: 22px; }
@@ -288,7 +295,7 @@ td.on { font-weight: 800; color: var(--ink); }
 thead tr { background: var(--card); }
 tr.us td { background: color-mix(in srgb, var(--team) 10%, var(--card)); }
 .tc { display: inline-flex; align-items: center; gap: 12px; }
-.tc b { font-family: var(--display); font-weight: 700; font-size: 1.12rem; text-transform: uppercase; letter-spacing: .02em; }
+.tc b { font-family: var(--display); font-weight: 700; font-size: 1.02rem; text-transform: uppercase; letter-spacing: .02em; }
 tbody tr.link { cursor: pointer; transition: background .12s; }
 tbody tr.link:hover td { background: var(--raise); }
 tr.cutline td { border-bottom: 2px dashed color-mix(in srgb, var(--team) 60%, transparent); }
@@ -306,15 +313,15 @@ tfoot td { border-top: 1px solid var(--soft); font-weight: 800; }
 .art .vsart { display: flex; align-items: center; gap: 14px; }
 .art .vsart .num { font-size: 1.9rem; font-weight: 800; }
 .art .big-logo { font-size: 3rem; }
-.story { display: grid; gap: 6px; padding: 18px 22px 22px; align-content: start; }
+.story { display: grid; gap: 6px; padding: 14px 18px 18px; align-content: start; }
 .story .row { display: flex; gap: 10px; align-items: center; }
-.story h3 { font-family: var(--display); font-weight: 700; font-size: 1.4rem; line-height: 1.08; text-transform: uppercase; }
+.story h3 { font-family: var(--display); font-weight: 700; font-size: 1.2rem; line-height: 1.08; text-transform: uppercase; }
 .story p { color: var(--soft); font-size: .95rem; }
 .chip { font-family: var(--body); font-weight: 700; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--team-ink); }
 
 /* ── page heads & tabs ── */
 .phead { display: grid; gap: 6px; }
-.phead h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: .92; }
+.phead h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: .92; }
 .seg { display: inline-flex; gap: 4px; padding: 4px; background: var(--raise); border-radius: 999px; justify-self: start; }
 .seg button { border: 0; background: none; padding: 8px 18px; border-radius: 999px; font-family: var(--body); font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: var(--soft); transition: background .15s, color .15s; }
 .seg button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
@@ -324,25 +331,25 @@ tfoot td { border-top: 1px solid var(--soft); font-weight: 800; }
 /* ── teams ── */
 .team-grid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
 .tcard { display: grid; }
-.tcard-top { display: flex; justify-content: space-between; align-items: flex-end; padding: 22px; color: #fff; background: var(--court) center / cover, linear-gradient(120deg, color-mix(in srgb, var(--c) 58%, #000), color-mix(in srgb, var(--c) 74%, #000) 60%, color-mix(in srgb, var(--c) 54%, #000)); }
+.tcard-top { display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 18px; color: #fff; background: var(--court) center / cover, linear-gradient(120deg, color-mix(in srgb, var(--c) 58%, #000), color-mix(in srgb, var(--c) 74%, #000) 60%, color-mix(in srgb, var(--c) 54%, #000)); }
 .tcard-top .label { color: rgb(255 255 255 / .9); font-size: .9rem; }
-.tcard-body { display: grid; gap: 4px; padding: 18px 22px 8px; }
-.tcard-body b { font-family: var(--display); font-weight: 800; font-size: 1.7rem; text-transform: uppercase; line-height: 1; }
+.tcard-body { display: grid; gap: 3px; padding: 12px 18px 6px; }
+.tcard-body b { font-family: var(--display); font-weight: 800; font-size: 1.45rem; text-transform: uppercase; line-height: 1; }
 .mini { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--hair); margin-top: 12px; }
-.mini div { padding: 12px 0; text-align: center; }
+.mini div { padding: 8px 0; text-align: center; }
 .mini div + div { border-left: 1px solid var(--hair); }
-.mini b { display: block; font-size: 1.35rem; line-height: 1.1; }
+.mini b { display: block; font-size: 1.15rem; line-height: 1.1; }
 
 /* ── roster cards ── */
-.cards { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-.pcard { display: grid; gap: 6px; padding: 0 22px; position: relative; }
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.pcard { display: grid; gap: 4px; padding: 0 16px; position: relative; }
 .pcard .jersey { --depth: linear-gradient(120deg, color-mix(in srgb, var(--team) 58%, #000), color-mix(in srgb, var(--team) 74%, #000) 60%, color-mix(in srgb, var(--team) 54%, #000));
-  display: flex; justify-content: space-between; align-items: flex-end; margin: 0 -22px 10px; padding: 14px 20px 0; height: 104px; background: var(--court) center / cover, var(--depth); color: #fff; font-weight: 800; font-size: 4.2rem; line-height: 1; }
-.pcard .jersey .avatar { width: 64px; height: 64px; font-size: 1.5rem; margin-bottom: -24px; box-shadow: 0 0 0 4px var(--card); }
-.pcard .nm { font-family: var(--display); font-weight: 800; font-size: 1.5rem; text-transform: uppercase; line-height: 1; margin-top: 12px; }
+  display: flex; justify-content: space-between; align-items: flex-end; margin: 0 -16px 8px; padding: 10px 14px 0; height: 74px; background: var(--court) center / cover, var(--depth); color: #fff; font-weight: 800; font-size: 3rem; line-height: 1; }
+.pcard .jersey .avatar { width: 46px; height: 46px; font-size: 1.1rem; margin-bottom: -18px; box-shadow: 0 0 0 4px var(--card); }
+.pcard .nm { font-family: var(--display); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; line-height: 1; margin-top: 8px; }
 .pcard .nm small { display: block; font-weight: 600; font-size: .95rem; color: var(--soft); }
 .pcard .cap { position: absolute; top: 12px; right: 14px; color: #fff; background: rgb(0 0 0 / .3); padding: 3px 9px; border-radius: 999px; font-size: .68rem; }
-.pcard .mini { margin: 14px -22px 0; }
+.pcard .mini { margin: 10px -16px 0; }
 
 /* ── player banner ── */
 .back { border: 1px solid var(--hair); background: var(--card); width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem; line-height: 1; justify-self: start; }
@@ -430,11 +437,11 @@ main > .back:first-child { margin-top: 40px; }
   .hero-stats div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .hero-stats dd { font-size: 1.8rem; }
   .nextpanel { max-width: none; }
-  .sh h2 { font-size: 1.35rem; }
+  .sh h2 { font-size: 1.25rem; }
   .leaders-grid { grid-template-columns: 1fr; }
   .ltiles { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .ltile { padding: 16px; }
-  .ltile-val { font-size: 2.4rem; }
+  .ltile { padding: 14px; }
+  .ltile-val { font-size: 2rem; }
   .ltile-who .avatar { width: 34px; height: 34px; font-size: .85rem; }
   .ltile-who small { display: none; }
   .rs { padding: 14px 16px; gap: 10px; grid-template-columns: 1fr 1fr; }
@@ -444,13 +451,14 @@ main > .back:first-child { margin-top: 40px; }
   .narrow { display: inline; }
   .scoreboard { margin-top: -120px; }
   .top.band:has(+ .scoreboard), .player-top.band { padding-bottom: 100px; }
-  .cards { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .pcard { padding: 0 14px; }
-  .pcard .jersey { margin: 0 -14px 8px; padding: 10px 12px 0; height: 80px; font-size: 3rem; }
-  .pcard .jersey .avatar { width: 46px; height: 46px; font-size: 1.05rem; margin-bottom: -18px; }
-  .pcard .nm { font-size: 1.2rem; }
-  .pcard .mini { margin: 10px -14px 0; }
-  .pcard .mini b { font-size: 1.1rem; }
+  .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pcard { padding: 0 12px; }
+  .pcard .jersey { margin: 0 -12px 6px; padding: 8px 10px 0; height: 56px; font-size: 2.2rem; }
+  .pcard .jersey .avatar { width: 36px; height: 36px; font-size: .85rem; margin-bottom: -14px; }
+  .pcard .nm { font-size: 1.05rem; margin-top: 6px; }
+  .pcard .mini { margin: 8px -12px 0; }
+  .pcard .mini b { font-size: 1rem; }
+  .pcard .mini div { padding: 6px 0; }
   .board { padding: 24px 10px; gap: 8px; }
   .bteam .logo.lg { width: 50px; height: 50px; font-size: 1.5rem; }
   .bteam b { font-size: 1rem; }
@@ -579,6 +587,16 @@ a.sr:hover b { color: var(--team-ink); }
   /* Pinned name columns while the numbers scroll. */
   .sticky { box-shadow: 1px 0 0 var(--hair); }
   td.l.sticky { max-width: 44vw; white-space: normal; }
+  /* A plain name (the players table) stays on one line so every row is one line tall; team names with a logo may wrap. */
+  td.l.sticky:not(:has(.tc)) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bl-head { padding: 12px 14px 4px; }
+  .bl-row { padding: 6px 14px; gap: 9px; }
+  .bl-row .avatar { width: 30px; height: 30px; font-size: .78rem; }
+  .bl-row .nm { font-size: .9rem; line-height: 1.15; }
+  .bl-row .nm small { font-size: .7rem; }
+  .bl-row .num { font-size: 1.1rem; }
+  .bl-row.first .num { font-size: 1.45rem; }
+  .leaders-grid.wide-grid { gap: 12px; }
   td.l.sticky .tc b { line-height: 1.05; }
 
   /* Comfortable tap targets. */
@@ -749,3 +767,14 @@ details summary { cursor: pointer; }
 .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .seg::-webkit-scrollbar { display: none; }
 @media (max-width: 760px) { .ad-tabs button { padding: 10px 12px; } }
+
+/* ── games page: upcoming first, then finished ── */
+#upcoming, #results { scroll-margin-top: 130px; }
+.dayblock { display: grid; gap: 10px; }
+.dayhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.dayhead b { font-family: var(--display); font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: .02em; }
+.dayhead span { font-family: var(--body); font-weight: 600; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--soft); }
+/* score strip: a mark where the finished games begin, and a live game stands out */
+.tk.sep { border-left: 3px solid var(--bar-line); }
+.tk.on-air .tk-status { color: var(--loss); }
+.tk.on-air .tk-status::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: var(--loss); vertical-align: 1px; }

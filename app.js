@@ -703,11 +703,12 @@
     home() {
       const nextPlayoff = pgames.find((g) => !g.played);
       const feature = PO && PO.champion ? null : nextPlayoff || gameOfTheWeek();
-      const lastDay = played.length ? played[played.length - 1].date.slice(0, 10) : null;
-      const lastRound = played.filter((g) => g.date.startsWith(lastDay));
-      const nextDay = upcoming.length ? upcoming[0].date.slice(0, 10) : null;
-      const nextRound = upcoming.filter((g) => g.date.startsWith(nextDay));
-      const week = nextRound.length ? weekOf(nextRound[0]) : dates.length;
+      // Playoff games count too: the coming round and the latest results are whatever was played or is next, in any stage.
+      const playedAll = ALL.filter((g) => g.played), upcomingAll = ALL.filter((g) => !g.played);
+      const lastDay = playedAll.length ? playedAll[playedAll.length - 1].date.slice(0, 10) : null;
+      const lastRound = playedAll.filter((g) => g.date.startsWith(lastDay));
+      const nextDay = upcomingAll.length ? upcomingAll[0].date.slice(0, 10) : null;
+      const nextRound = upcomingAll.filter((g) => g.date.startsWith(nextDay));
       const result = (g) => {
         const side = (t, i) => `<span class="rs-team${g.score[i] < g.score[1 - i] ? " lose" : ""}">${logo(t)}<b>${esc(short(t))}</b><span class="num">${g.score[i]}</span></span>`;
         return `<a class="rs" href="#game/${g.id}">${side(g.home, 0)}${side(g.away, 1)}<span class="rs-end label">Final →</span></a>`;
@@ -723,10 +724,10 @@
       const slides = order.filter(showing).map((s) => (s.auto ? autos[s.auto] : customSlide(s))).filter(Boolean);
       return `${hero(slides.length ? slides : [autos.league])}
         ${signupBand()}
-        ${nextRound.length ? `<section>${sh(`This week`, "#games", "Full schedule")}<p class="sub">Week ${week} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
+        ${nextRound.length ? `<section>${sh(`Coming up`, "#games", "All games")}<p class="sub">${esc(stageOf(nextRound[0]))} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(nextRound[0].venue || L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
           <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
-          ${lastRound.length ? `<section>${sh(`Week ${weekOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
+          ${lastRound.length ? `<section>${sh(`${stageOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
         </div>
         ${PO && !PO.champion ? (() => { const r = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0]; return `<section>${sh(`Playoffs · ${esc(r.name)}`, "#playoffs", "Bracket")}<div class="series-grid">${r.series.map(seriesCard).join("")}</div></section>`; })() : ""}
         ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
@@ -736,13 +737,15 @@
     },
 
     games(tab) {
-      const which = tab === "results" ? "results" : tab === "upcoming" || upcoming.length ? "upcoming" : "results";
-      const list = which === "results" ? [...played].reverse() : upcoming;
-      const byDay = [];
-      list.forEach((g) => { const d = g.date.slice(0, 10); const last = byDay[byDay.length - 1]; last && last.d === d ? last.gs.push(g) : byDay.push({ d, gs: [g] }); });
+      // Upcoming first (soonest first), then finished (latest first). Playoff games are listed too, under their stage's name.
+      const days = (list) => { const out = []; list.forEach((g) => { const d = g.date.slice(0, 10); const last = out[out.length - 1]; last && last.d === d ? last.gs.push(g) : out.push({ d, gs: [g] }); }); return out; };
+      const block = ({ d, gs }) => `<section class="dayblock"><div class="dayhead"><b>${esc(stageOf(gs[0]))}</b><span>${esc(dfmt(d + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(gs[0].venue || L.venue)}</span></div><div class="games-grid">${gs.map(gameCard).join("")}</div></section>`;
+      const coming = ALL.filter((g) => !g.played);
+      const done = ALL.filter((g) => g.played);
+      if (tab === "results") setTimeout(() => { const el = document.getElementById("results"); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 140 }); }, 0);
       return head(`${L.name} · ${L.season}`, "Games") + `<div class="stack">
-        ${seg([["upcoming", "Upcoming", "#games/upcoming"], ["results", "Results", "#games/results"]], which)}
-        ${byDay.map(({ d, gs }) => `<section>${sh(`Week ${weekOf(gs[0])}`, null, `${dfmt(d + "T12:00", { weekday: "long", month: "long", day: "numeric" })} · ${L.venue}`)}<div class="games-grid">${gs.map(gameCard).join("")}</div></section>`).join("") || `<p class="card empty">Nothing here yet.</p>`}
+        ${coming.length ? `<section id="upcoming">${sh("Upcoming", null, `${coming.length} to play`)}<div class="stack">${days(coming).map(block).join("")}</div></section>` : ""}
+        <section id="results">${sh("Finished", null, `${done.length} played`)}<div class="stack">${days(done).reverse().map(block).join("") || `<p class="card empty">No games played yet.</p>`}</div></section>
       </div>`;
     },
 
@@ -1001,18 +1004,20 @@
   }
 
   // ---------- score strip: the last round played and the next one ----------
+  // The strip along the very top: games being played, then the ones still to come (soonest first), then the latest finished ones.
   function ticker() {
-    const days = [...new Set(ALL.map((g) => g.date.slice(0, 10)))];
-    const lastPlayed = days.filter((d) => ALL.some((g) => g.date.startsWith(d) && g.played)).pop();
-    const nextDay = days.find((d) => ALL.some((g) => g.date.startsWith(d) && !g.played));
-    return [lastPlayed, nextDay].filter(Boolean).map((d) => ALL.filter((g) => g.date.startsWith(d)).map((g) => {
-      const status = g.played ? "Final" : `${wkday(g.date)} ${time(g.date)}`;
+    const live = ALL.filter((g) => g.live && !g.played);
+    const coming = ALL.filter((g) => !g.played && !g.live).slice(0, 8);
+    const done = ALL.filter((g) => g.played).slice(-8).reverse();
+    const card = (g, sep) => {
+      const status = g.played ? "Final" : g.live ? "Live" : `${wkday(g.date)} ${time(g.date)}`;
       const line = (t, i) => {
         const lose = g.played && g.score[i] < g.score[1 - i];
-        return `<span class="tk-row${lose ? " lose" : ""}">${logo(t)}${esc(short(t))}<b>${g.played ? g.score[i] : record(t)}</b></span>`;
+        return `<span class="tk-row${lose ? " lose" : ""}">${logo(t)}${esc(short(t))}<b>${g.played ? g.score[i] : g.live ? g.live[i] : record(t)}</b></span>`;
       };
-      return `<a class="tk" href="#game/${g.id}"><span class="tk-status">${esc(status)}</span>${line(g.home, 0)}${line(g.away, 1)}</a>`;
-    }).join("")).join("");
+      return `<a class="tk${sep ? " sep" : ""}${g.live ? " on-air" : ""}" href="#game/${g.id}"><span class="tk-status">${esc(status)}</span>${line(g.home, 0)}${line(g.away, 1)}</a>`;
+    };
+    return [...live.map((g) => card(g)), ...coming.map((g) => card(g)), ...done.map((g, k) => card(g, k === 0 && (live.length || coming.length)))].join("");
   }
 
   // The browser tab's and a shared link's title: what the page is about, then the league.

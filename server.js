@@ -11,7 +11,7 @@ const content = require("./content.js");
 const root = __dirname;
 const types = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp"
+  ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp", ".woff2": "font/woff2"
 };
 const hidden = new Set(["server.js", "hooperville.js", "signups.js", "content.js", "package.json", "railway.json", "CLAUDE.md", "README.md"]);
 
@@ -125,7 +125,7 @@ http.createServer((req, res) => {
   }
   fs.readFile(full, (err, body) => {
     if (err) { res.writeHead(404, { "content-type": "text/plain" }); return res.end("Not found"); }
-    res.writeHead(200, { "content-type": types[path.extname(full)], "cache-control": /\.(html|js|css)$/.test(name) ? "no-cache" : "public, max-age=300" });
+    res.writeHead(200, { "content-type": types[path.extname(full)], "cache-control": /\.(html|js|css)$/.test(name) ? "no-cache" : /\.woff2$/.test(name) ? "public, max-age=31536000, immutable" : "public, max-age=300" });
     res.end(body);
   });
 }).listen(process.env.PORT || 8080, () => console.log("Serving on :" + (process.env.PORT || 8080)));

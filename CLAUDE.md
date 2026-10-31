@@ -63,7 +63,9 @@ columns stay pinned. The owner rejected both a busier version and a plainer one;
 
 ### Type, colour and logos (Oct 2026 pass, "NBA feel")
 
-- Fonts: Barlow Condensed (600/700/800) for headlines, scores, numbers, team names and the nav; Roboto for body text,
+- Fonts are self-hosted in `fonts/` (Latin subsets as woff2, @font-face at the top of `styles.css`, the three main ones preloaded in
+  `index.html`), so no request leaves the site and every phone gets the same faces; Roboto is one variable file for all weights.
+  Barlow Condensed (600/700/800) for headlines, scores, numbers, team names and the nav; Roboto for body text,
   small labels, table headers, tabs and form text (small caps in the condensed face were hard to read).
 - Hierarchy: page title (`.phead h1`) about 3.6rem max; section headers (`.sh h2`) 1.6rem with a gold bar and a hairline; card
   titles 1.2-1.4rem; small labels 0.7rem Roboto uppercase. Keep the accent for bars, underlines and buttons only.
@@ -81,6 +83,18 @@ columns stay pinned. The owner rejected both a busier version and a plainer one;
   (raster images only, cached six hours in memory, last copy kept if Hooperville is down), so the site data carries
   `/hv-logo/…` addresses. Logos are 256px squares and fill the round badge (`object-fit: cover`). The crests remain for any
   team without a logo. Hooperville has no player photos.
+
+### Game order (owner's request, Oct 2026)
+
+Games always go upcoming first (soonest first), then finished (latest first): the score strip along the top (live, up to 8 upcoming,
+then up to 8 finished, a rule marks where finished ones begin), the Games page (one page with an Upcoming section then a Finished
+section, no tabs; `#games/results` scrolls to Finished), and Home ("Coming up" then the latest results). Playoff games are included
+everywhere under their stage's name (they used to be missing from the Games page and Home).
+
+### Box sizes
+
+Stats leader boards, roster (player) cards, team cards, Home leader tiles and tables were slimmed on purpose (owner: "too big").
+Player names in the players table stay on one line on phones. Keep new boxes in the same compact range.
 
 ### Quality checks that were run (Oct 2026)
 
