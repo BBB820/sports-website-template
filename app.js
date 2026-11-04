@@ -249,22 +249,26 @@
     return d >= 1 ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
   }
 
-  const sh = (title, link, label) => `<div class="sh"><h2>${title}</h2>${link ? `<a href="${link}">${label} →</a>` : label ? `<span>${label}</span>` : ""}</div>`;
-  const head = (eyebrow, title) => `<section class="phead"><span class="label">${esc(eyebrow)}</span><h1>${esc(title)}</h1></section>`;
+  const sh = (title, link, label) => `<div class="sh"><h2><span>${title}</span></h2>${link ? `<a class="pill" href="${link}">${label} →</a>` : label ? `<span class="pill ghost">${label}</span>` : ""}</div>`;
+  // "Season 7" becomes the big outlined S7 behind every page title.
+  const seasonMark = () => { const m = /(\d+)\s*$/.exec(L.season || ""); return m ? "S" + m[1] : (L.short || "").slice(0, 3); };
+  const head = (eyebrow, title) => `<section class="phead"><span class="label">${esc(eyebrow)}</span><h1><mark>${esc(title)}</mark></h1><b class="bigmark" aria-hidden="true">${esc(seasonMark())}</b></section>`;
   const seg = (items, current, attr = "data-go") => `<div class="seg" role="tablist">${items.map(([v, label, go]) => `<button role="tab" aria-selected="${v === current}" ${attr}="${esc(go ?? v)}">${esc(label)}</button>`).join("")}</div>`;
 
   // ---------- shared pieces ----------
+  // A game as a ticket stub: stage on top, the two teams, then the torn-off stub with the date and a barcode.
   function gameCard(g) {
     const sc = g.played ? g.score : g.live;
-    const stamp = g.played ? `<span class="label">Final</span>` : g.live ? `<span class="count live">Live</span>` : `<span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span>`;
     const line = (t, i) => {
       const lose = g.played && g.score[i] < g.score[1 - i];
-      return `<div class="tline${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm">${esc(t)}<small>${esc(record(t))}</small></span>${sc ? `<span class="pts num">${sc[i]}</span>` : ""}</div>`;
+      return `<div class="tl${lose ? " lose" : ""}">${logo(t, "md")}<span class="nm"><b>${esc(t)}</b><small>${esc(record(t))}</small></span>${sc ? `<span class="pts">${sc[i]}</span>` : ""}</div>`;
     };
-    const foot = g.played ? `<span>${esc(stageOf(g))}</span><em>Box score →</em>` : `<span>${esc(time(g.date))} · ${esc(stageOf(g))}</span><em>Preview →</em>`;
-    const c = g.played ? TEAMS[winner(g)].color : L.color;
-    return `<a class="card game" style="--c:${esc(c)}" href="#game/${g.id}"><div class="game-top"><span class="label">${esc(day(g.date))}</span>${stamp}</div>
-      <div class="teams">${line(g.home, 0)}${line(g.away, 1)}</div><div class="game-foot">${foot}</div></a>`;
+    const stamp = g.played ? `<span class="stamp">Final</span>` : g.live ? `<span class="stamp live">Live</span>` : `<span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span>`;
+    const c = g.played ? TEAMS[winner(g)].color : TEAMS[g.home].color;
+    return `<a class="ticket" style="--c:${esc(c)}" href="#game/${g.id}">
+      <div class="tk-top"><span class="tape sm">${esc(stageOf(g))}</span>${stamp}</div>
+      <div class="tk-body">${line(g.home, 0)}${line(g.away, 1)}</div>
+      <div class="tk-stub"><span>${esc(day(g.date))} · ${esc(time(g.date))}</span><em>${g.played ? "Box score" : "Preview"} →</em><i class="barcode" aria-hidden="true"></i></div></a>`;
   }
 
   function leaderBoard(label, key, unit, n = 5, compact = false) {
@@ -276,13 +280,18 @@
         <span class="num">${avg(s.t[key], s.gp)}</span></a>`).join("")}</div>`;
   }
 
+  // The league table as a scoreboard: win-percentage bars behind the rows, the form of the last five games, and a
+  // tag where the playoff line falls.
   function standingsTable(compact) {
-    return `<div class="card scroll"><table>
-      <thead><tr><th>#</th><th class="l sticky">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th>GB</th><th>PPG</th><th>OPPG</th><th>L5</th>"}<th>Strk</th></tr></thead>
-      <tbody>${TABLE.map((r) => `<tr class="link${r.rank === 4 && !compact ? " cutline" : ""}" data-go="${tlink(r.team)}"><td>${r.rank}</td>
+    const cols = compact ? 5 : 11;
+    const row = (r) => `<tr class="link" data-go="${tlink(r.team)}" style="--p:${r.gp ? Math.round((100 * r.w) / r.gp) : 0}%"><td class="rk">${r.rank}</td>
         <td class="l sticky"><span class="tc">${logo(r.team)}<b>${compact ? `<span class="wide">${esc(r.team)}</span><span class="narrow">${esc(short(r.team))}</span>` : esc(r.team)}</b></span></td><td>${r.w}</td><td>${r.l}</td>
-        ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td>${r.gb ? r.gb : "–"}</td><td>${r.ppg.toFixed(1)}</td><td>${r.oppg.toFixed(1)}</td><td>${r.last5.filter((x) => x === "W").length}-${r.last5.filter((x) => x === "L").length}</td>`}
-        <td>${r.streak || "–"}</td></tr>`).join("")}</tbody></table></div>`;
+        ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td>${r.gb ? r.gb : "–"}</td><td>${r.ppg.toFixed(1)}</td><td>${r.oppg.toFixed(1)}</td><td><span class="fm" role="img" aria-label="Last five: ${r.last5.join(" ")}">${r.last5.map((x) => `<i class="${x}"></i>`).join("")}</span></td>`}
+        <td class="stk ${r.streak ? r.streak[0] : ""}">${r.streak || "–"}</td></tr>`;
+    const body = TABLE.map((r) => row(r) + (r.rank === 4 && TABLE.length > 4 ? `<tr class="cut" aria-hidden="true"><td colspan="${cols}"><span>Playoff line</span></td></tr>` : "")).join("");
+    return `<div class="ladder scroll"><table>
+      <thead><tr><th>#</th><th class="l sticky">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th>GB</th><th>PPG</th><th>OPPG</th><th>L5</th>"}<th>Strk</th></tr></thead>
+      <tbody>${body}</tbody></table></div>`;
   }
 
   // With live data there is no written news: recap the latest results instead.
@@ -343,17 +352,27 @@
     return upcoming.filter((g) => g.date.startsWith(d)).sort((a, b) => (rowOf(b.home).w + rowOf(b.away).w) - (rowOf(a.home).w + rowOf(a.away).w))[0];
   }
 
-  function featurePanel(g) {
-    const side = (t) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small>${esc(record(t))} · ${ordinal(rowOf(t).rank)}</small></div>`;
-    return `<a class="nextpanel" href="#game/${g.id}">
-      <div class="np-top"><span class="label">${g.playoff ? esc(stageOf(g)) : "Game of the week"}</span><span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span></div>
-      <div class="np-vs">${side(g.home)}<span class="at">VS</span>${side(g.away)}</div>
-      <div class="np-top"><span class="label">${esc(day(g.date))} · ${esc(time(g.date))}</span><span class="label">Preview →</span></div></a>`;
+  // ---------- home banner: matchday posters in a slideshow ----------
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  const colorGap = (a, b) => { const p = hexParts(a), q = hexParts(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
+  // A poster splits in the two teams' colours; two teams too alike to tell apart get gold or black as the second.
+  const posterColors = (home, away) => {
+    const a = TEAMS[home].color;
+    let b = TEAMS[away].color;
+    if (colorGap(a, b) < 110) b = bright(a) < 0.5 ? "#e9b61b" : "#1b1b1f";
+    return [a, b];
+  };
+
+  // One matchup as a poster: the two teams either side of a diagonal, big names, and the score once it is played.
+  function poster({ g, tag, nav, foot, href, cta, scores }) {
+    const [a, b] = posterColors(g.home, g.away);
+    const side = (t, i, cls) => `<div class="pz-side ${cls}${scores && scores[i] < scores[1 - i] ? " lose" : ""}">${logo(t, "xl")}<h2 class="pz-name">${esc(t)}</h2>${scores ? `<b class="pz-score">${scores[i]}</b>` : `<span class="pz-rec">${esc(record(t))} · ${ordinal(rowOf(t).rank)}</span>`}</div>`;
+    return { c: a, cls: "poster", nav, body: `<div class="pz" style="--a:${esc(a)};--b:${esc(b)}">
+      <span class="tape pz-tape">${esc(tag)}</span>${side(g.home, 0, "l")}<span class="pz-vs" aria-hidden="true">${scores ? "Final" : "VS"}</span>${side(g.away, 1, "r")}
+      <div class="pz-foot"><span class="pz-info">${foot}</span><a class="hero-link" href="${href}">${cta} →</a></div></div>` };
   }
 
-  // ---------- home banner: a slideshow ----------
-  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-  // The automatic slides besides the league one: the closest game of the last round, the scoring leader,
+  // The automatic slides besides the title one: the closest game of the last round, the scoring leader,
   // first place and the latest article or league post.
   function heroSlides(lastRound) {
     const out = {};
@@ -362,46 +381,43 @@
       const w = winner(close), l = opp(close, w);
       const all = [close.home, close.away].flatMap((t) => boxScore(close, t).map((x) => ({ ...x, team: t })));
       const star = (close.potg && all.find((x) => x.key === close.potg)) || [...all].sort((a, b) => eff(b) - eff(a))[0];
-      const side = (t, i) => `<div class="side">${logo(t, "md")}<b>${esc(t)}</b><small class="num${close.score[i] < close.score[1 - i] ? " lose" : ""}">${close.score[i]}</small></div>`;
-      const [w1, ...wr] = w.split(" ");
-      out.closest = ({ c: TEAMS[w].color, body: `<div class="hero-copy"><span class="label">${esc(stageOf(close))} · Closest finish</span>
-        <h2 class="big">${esc(w1)} <span>${esc(wr.join(" "))}</span></h2>
-        <p class="meta">Beat ${esc(l)} by ${Math.abs(close.score[0] - close.score[1])}.${star ? ` <b>${esc(star.name)}</b> (${esc(short(star.team))}) had ${plural(star.pts, "point")}, ${plural(star.reb, "rebound")} and ${plural(star.ast, "assist")}.` : ""}</p></div>
-        <a class="nextpanel" href="#game/${close.id}"><div class="np-top"><span class="label">Final · ${esc(day(close.date))}</span></div>
-          <div class="np-vs score">${side(close.home, 0)}<span class="at">–</span>${side(close.away, 1)}</div>
-          <div class="np-top"><span class="label">${esc(L.venue)}</span><span class="label">Box score →</span></div></a>` });
+      out.closest = poster({ g: close, tag: `${stageOf(close)} · Closest finish`, nav: "Closest finish", scores: close.score, href: `#game/${close.id}`, cta: "Box score",
+        foot: star ? `<b>${esc(star.name)}</b> (${esc(short(star.team))}) · ${star.pts} PTS · ${star.reb} REB · ${star.ast} AST` : `${esc(w)} beat ${esc(l)} by ${Math.abs(close.score[0] - close.score[1])}` });
     }
     const s = leadersIn("pts", 1)[0];
     if (s) {
       const [f, last] = nameParts(s.p.name);
-      out.leader = ({ c: TEAMS[s.p.team].color, body: `<div class="hero-copy"><span class="label">League leader · Points</span>
-        <h2 class="big">${esc(f)} <span>${esc(last)}</span></h2>
-        <p class="meta">${esc(s.p.team)} · #${esc(s.p.no)}${s.p.pos ? " · " + esc(s.p.pos) : ""}</p>
-        <dl class="hero-stats">${[["PPG", "pts"], ["RPG", "reb"], ["APG", "ast"], ["EFF", "eff"]].map(([l, k]) => `<div><dt>${l}</dt><dd class="num">${avg(s.t[k], s.gp)}</dd></div>`).join("")}</dl><a class="hero-link phone-only" href="${plink(s.p)}">Player page →</a></div>
-        <a class="nextpanel who side-only" href="${plink(s.p)}"><span class="jersey-big num${s.p.photo ? " pic" : ""}" style="--c:${esc(TEAMS[s.p.team].color)}">${s.p.photo ? `<img src="${esc(s.p.photo)}" alt="">` : esc(s.p.no)}</span>
-          <div class="np-top"><span class="label">${esc(s.gp)} games</span><span class="label">Player page →</span></div></a>` });
+      out.leader = { c: TEAMS[s.p.team].color, cls: "leader-slide", nav: "Top scorer", body: `<div class="ld">
+        ${s.p.no !== "" ? `<b class="ld-no" aria-hidden="true">${esc(s.p.no)}</b>` : ""}
+        <div class="ld-copy"><span class="tape">Scoring leader</span>
+          <h2 class="ld-name"><small>${esc(f)}</small>${esc(last)}</h2>
+          <p class="ld-meta">${logo(s.p.team)}<span>${[s.p.team, s.p.no !== "" && "#" + s.p.no, s.p.pos].filter(Boolean).map(esc).join(" · ")}</span></p>
+          <dl class="ld-stats">${[["PPG", "pts"], ["RPG", "reb"], ["APG", "ast"], ["EFF", "eff"]].map(([l, k]) => `<div><dt>${l}</dt><dd>${avg(s.t[k], s.gp)}</dd></div>`).join("")}</dl>
+          <a class="hero-link" href="${plink(s.p)}">Player page →</a></div></div>` };
     }
     if (played.length) {
-      const top = TABLE[0], [t1, ...tr] = top.team.split(" ");
-      const row = (r) => `<div class="mini-row">${`<span class="label">${r.rank}</span>`}${logo(r.team)}<b>${esc(short(r.team))}</b><span class="num">${r.w}-${r.l}</span></div>`;
-      out.standings = ({ c: TEAMS[top.team].color, body: `<div class="hero-copy"><span class="label">Standings · First place</span>
-        <h2 class="big">${esc(t1)} <span>${esc(tr.join(" "))}</span></h2>
-        <p class="meta">${[top.streak && `${top.streak[0] === "W" ? "Won" : "Lost"} ${top.streak.slice(1)} straight`, TABLE[1] && (TABLE[1].gb ? `${plural(TABLE[1].gb, "game")} clear of ${esc(TABLE[1].team)}` : `level with ${esc(TABLE[1].team)}`)].filter(Boolean).join(" · ")}</p>
-        <dl class="hero-stats"><div><dt>Record</dt><dd class="num">${top.w}-${top.l}</dd></div><div><dt>PPG</dt><dd class="num">${top.ppg.toFixed(1)}</dd></div><div><dt>OPPG</dt><dd class="num">${top.oppg.toFixed(1)}</dd></div><div><dt>Last 5</dt><dd class="num">${top.last5.filter((x) => x === "W").length}-${top.last5.filter((x) => x === "L").length}</dd></div></dl><a class="hero-link phone-only" href="#standings">Standings →</a></div>
-        <a class="nextpanel side-only" href="#standings"><div class="np-top"><span class="label">Top of the table</span></div>
-          <div class="ministand">${TABLE.slice(0, 4).map(row).join("")}</div>
-          <div class="np-top"><span class="label">${esc(L.season)}</span><span class="label">Standings →</span></div></a>` });
+      const top = TABLE[0], four = TABLE.slice(0, 4), maxW = Math.max(1, ...four.map((r) => r.w));
+      const meta = [top.streak && `${top.streak[0] === "W" ? "Won" : "Lost"} ${top.streak.slice(1)} straight`, TABLE[1] && (TABLE[1].gb ? `${plural(TABLE[1].gb, "game")} clear of ${TABLE[1].team}` : `level with ${TABLE[1].team}`)].filter(Boolean).map(esc).join(" · ");
+      out.standings = { c: TEAMS[top.team].color, cls: "podium-slide", nav: "Top four", body: `<div class="pd">
+        <div class="pd-copy"><span class="tape">First place</span>
+          <h2 class="pd-name">${esc(top.team)}</h2>
+          <p class="pd-meta">${meta}</p>
+          <dl class="ld-stats"><div><dt>Record</dt><dd>${top.w}-${top.l}</dd></div><div><dt>PPG</dt><dd>${top.ppg.toFixed(1)}</dd></div><div><dt>OPPG</dt><dd>${top.oppg.toFixed(1)}</dd></div><div><dt>Last 5</dt><dd>${top.last5.filter((x) => x === "W").length}-${top.last5.filter((x) => x === "L").length}</dd></div></dl>
+          <a class="hero-link" href="#standings">Standings →</a></div>
+        <ol class="pd-bars">${four.map((r) => `<li style="--h:${Math.round(96 + 150 * r.w / maxW)}px;--c:${esc(TEAMS[r.team].color)}"><a href="${tlink(r.team)}" aria-label="${esc(r.team)}, ${r.w}-${r.l}">${logo(r.team, "md")}<b>${esc(short(r.team))}</b><span class="pd-bar"><i>${r.rank}</i></span><em>${r.w}-${r.l}</em></a></li>`).join("")}</ol></div>` };
     }
     const post = newsItems().find((n) => n.article || !recapGame(n));
-    if (post) out.news = { c: L.color, img: post.photo, focus: post.focus, body: `<div class="hero-copy"><span class="label">${esc(post.tag || "News")} · ${esc(day(post.date))}</span>
-        <h2 class="big long">${esc(post.title)}</h2>
-        <p class="meta">${esc(post.body)}</p>
-        <a class="hero-link" href="${post.article ? `#article/${esc(post.article)}` : "#news"}">${post.article ? "Read story" : "All news"} →</a></div>${post.photo ? "" : logo(null, "xl")}` };
+    if (post) out.news = { c: L.color, img: post.photo, focus: post.focus, cls: "story-slide", nav: "News", body: `<div class="st">
+        <div class="st-copy"><span class="tape">${esc(post.tag || "News")} · ${esc(day(post.date))}</span>
+          <h2 class="st-title">${esc(post.title)}</h2>
+          <p class="st-text">${esc(post.body)}</p>
+          <a class="hero-link" href="${post.article ? `#article/${esc(post.article)}` : "#news"}">${post.article ? "Read story" : "All news"} →</a></div>
+        ${post.photo ? "" : `<div class="st-mark" aria-hidden="true">${logo(null, "xl")}</div>`}</div>` };
     return out;
   }
 
-  // The first slide: a championship banner. The race for the title during the season, the road to it in
-  // the playoffs, and the champion (with confetti) once crowned.
+  // The first slide: the title race. The race for the crown during the season, the road to it in the playoffs,
+  // and the champion (with confetti) once crowned.
   const TROPHY = `<svg class="trophy-svg" viewBox="0 0 200 250" aria-hidden="true"><defs>
     <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff4b8"/><stop offset=".35" stop-color="#f6c945"/><stop offset=".7" stop-color="#d49b1c"/><stop offset="1" stop-color="#9c6a08"/></linearGradient>
     <linearGradient id="goldDark" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d9a52a"/><stop offset="1" stop-color="#7d5406"/></linearGradient></defs>
@@ -421,62 +437,59 @@
     const t = PO && PO.champion ? PO.champion : done ? TABLE[0].team : null;
     if (t) {
       const mvp = PO && PO.mvp && playerByKey(PO.mvp.key), [a, ...b] = t.split(" "), r = TEAMS[t] && rowOf(t);
-      return { c: TEAMS[t] ? TEAMS[t].color : L.color, champ: true, cls: "title-slide crowned", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} champions</span>
-        <h1>${esc(a)} <span>${esc(b.join(" "))}</span></h1>
-        <p class="meta">${PO && PO.mvp ? `Finals MVP <b>${esc(mvp ? mvp.name : PO.mvp.name)}</b>${r ? " · " : ""}` : ""}${r ? `${r.w}-${r.l} ${PO ? "in the regular season" : "· first place"}` : ""}</p>
-        <a class="hero-link" href="${PO ? "#playoffs" : "#standings"}">${PO ? "The playoffs" : "Final standings"} →</a></div>${art(TEAMS[t] ? `<span class="champ-logo">${logo(t, "xl")}</span>` : "")}` };
+      return { c: TEAMS[t] ? TEAMS[t].color : L.color, champ: true, cls: "title-slide crowned", noPool: true, nav: "Champions", body: `<div class="ts"><div class="ts-copy"><span class="tape">${esc(L.season)} champions</span>
+        <h1>${b.length ? `${esc(a)} <mark>${esc(b.join(" "))}</mark>` : `<mark>${esc(a)}</mark>`}</h1>
+        <p class="ts-meta">${PO && PO.mvp ? `Finals MVP <b>${esc(mvp ? mvp.name : PO.mvp.name)}</b>${r ? " · " : ""}` : ""}${r ? `${r.w}-${r.l} ${PO ? "in the regular season" : "· first place"}` : ""}</p>
+        <a class="hero-link" href="${PO ? "#playoffs" : "#standings"}">${PO ? "The playoffs" : "Final standings"} →</a></div>${art(TEAMS[t] ? `<span class="champ-logo">${logo(t, "xl")}</span>` : "")}</div>` };
     }
-    const contenders = TABLE.slice(0, 4).map((r) => `<a class="contender" href="${tlink(r.team)}"><b class="num">${r.rank}</b>${logo(r.team)}<span>${esc(short(r.team))}</span><em class="num">${r.w}-${r.l}</em></a>`).join("");
+    const contenders = TABLE.slice(0, 4).map((r) => `<a class="contender" href="${tlink(r.team)}"><b>${r.rank}</b>${logo(r.team)}<span>${esc(short(r.team))}</span><em>${r.w}-${r.l}</em></a>`).join("");
     if (PO) {
       const next = pgames.find((g) => !g.played), round = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0];
-      return { c: L.color, cls: "title-slide", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} · Playoffs</span>
-        <h1>Road to the <span>title</span></h1>
-        <p class="meta">${esc(round.name)}${next ? ` · Next: <b>${esc(short(next.home))} vs ${esc(short(next.away))}</b>, ${esc(day(next.date))} ${esc(time(next.date))}` : ""}</p>
-        <a class="hero-link" href="#playoffs">The bracket →</a></div>${art()}` };
+      return { c: L.color, cls: "title-slide", noPool: true, nav: "The title", body: `<div class="ts"><div class="ts-copy"><span class="tape">${esc(L.season)} · Playoffs</span>
+        <h1>Road to the <mark>title</mark></h1>
+        <p class="ts-meta">${esc(round.name)}${next ? ` · Next: <b>${esc(short(next.home))} vs ${esc(short(next.away))}</b>, ${esc(day(next.date))} ${esc(time(next.date))}` : ""}</p>
+        <a class="hero-link" href="#playoffs">The bracket →</a></div>${art()}</div>` };
     }
     const left = dates.length - new Set(played.map((g) => g.date.slice(0, 10))).size;
-    return { c: L.color, cls: "title-slide", noPool: true, body: `<div class="hero-copy"><span class="label gold">${esc(L.season)} · Championship</span>
-      <h1>Chase for the <span>crown</span></h1>
-      <p class="meta">${left > 0 ? `${plural(left, "week")} left in the regular season.` : "The regular season is done."} Who lifts the trophy?</p>
+    return { c: L.color, cls: "title-slide", noPool: true, nav: "The title", body: `<div class="ts"><div class="ts-copy"><span class="tape">${esc(L.season)} · Championship</span>
+      <h1>Chase for the <mark>crown</mark></h1>
+      <p class="ts-meta">${left > 0 ? `${plural(left, "week")} left in the regular season.` : "The regular season is done."} Who lifts the trophy?</p>
       ${played.length ? `<div class="contenders">${contenders}</div>` : ""}
-      <a class="hero-link" href="#standings">Standings →</a></div>${art()}` };
-  }
-  // Game of the Week (or the next playoff game) on a slide of its own.
-  function gotwSlide(g) {
-    return { c: TEAMS[g.home].color, body: `<div class="hero-copy"><span class="label">${g.playoff ? esc(stageOf(g)) : `Game of the week · ${esc(stageOf(g))}`}</span>
-      <h2 class="big${(g.home + g.away).length > 20 ? " long" : ""}">${esc(g.home)} <span>vs ${esc(g.away)}</span></h2>
-      <p class="meta">${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(L.venue)}</p>
-      <a class="hero-link phone-only" href="#game/${g.id}">Game preview →</a></div>${featurePanel(g)}` };
+      <a class="hero-link" href="#standings">Standings →</a></div>${art()}</div>` };
   }
 
   // A slide the organisers made in the editor: their picture, words and where it leads.
   function customSlide(s) {
     const to = linkOf(s.link);
     const button = s.button || to.label;
-    const big = s.headline.length > 22 ? "big long" : "big";
-    return { c: L.color, img: s.image, focus: s.focus, custom: true, body: `<div class="hero-copy">${s.label ? `<span class="label">${esc(s.label)}</span>` : ""}
-      ${s.headline ? `<h2 class="${big}">${to.href ? `<a href="${esc(to.href)}"${to.ext}>${esc(s.headline)}</a>` : esc(s.headline)}</h2>` : ""}
-      ${s.text ? `<p class="meta">${esc(s.text)}</p>` : ""}
+    return { c: L.color, img: s.image, focus: s.focus, custom: true, nav: s.label || s.headline.slice(0, 22) || "Highlight", body: `<div class="cs">${s.label ? `<span class="tape">${esc(s.label)}</span>` : ""}
+      ${s.headline ? `<h2 class="cs-title">${to.href ? `<a href="${esc(to.href)}"${to.ext}>${esc(s.headline)}</a>` : esc(s.headline)}</h2>` : ""}
+      ${s.text ? `<p class="cs-text">${esc(s.text)}</p>` : ""}
       ${to.href && button ? `<a class="hero-link" href="${esc(to.href)}"${to.ext}>${esc(button)} →</a>` : ""}</div>` };
   }
   const today = () => new Date().toISOString().slice(0, 10);
   const showing = (s) => s.on !== false && (!s.from || s.from <= today()) && (!s.until || s.until >= today());
   const DEFAULT_ORDER = ["league", "gotw", "closest", "leader", "standings", "news"].map((auto) => ({ auto, on: true }));
 
-  // Photos from league.photos sit behind the slides in turn, darkened so the words stay readable.
+  // Game of the Week (or the next playoff game) as a poster of its own.
+  function gotwSlide(g) {
+    return poster({ g, tag: g.playoff ? stageOf(g) : `Game of the week · ${stageOf(g)}`, nav: g.playoff ? stageOf(g) : "Game of the week", href: `#game/${g.id}`, cta: "Game preview",
+      foot: `${esc(day(g.date))} · ${esc(time(g.date))} · ${esc(g.venue || L.venue)} <span class="count" data-countdown="${esc(g.date)}">${esc(countdown(g.date))}</span>` });
+  }
+
+  // The slides, then a numbered bar underneath to jump between them. Photos from league.photos sit behind
+  // the slides that take one, darkened so the words stay readable.
   function hero(slides) {
-    const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom || slides[i].noPool ? "" : POOL[i % POOL.length]);
+    const pic = (i) => slides[i].img || (slides[i].champ && L.championPhoto) || (slides[i].custom || slides[i].noPool || slides[i].cls === "poster" ? "" : POOL[i % POOL.length]);
     const pos = (f) => (f ? `;--pos:${+f.x || 0}% ${+f.y || 0}%` : "");
-    // Very dark team colours (near-black) need light words for the second, normally black, half of a headline.
-    const dark = (c) => { const m = /^#?([0-9a-f]{6})$/i.exec(c || ""); if (!m) return false; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 70; };
-    const bg = (i) => `${dark(slides[i].c) ? " dark-bg" : ""}${slides[i].cls ? " " + slides[i].cls : ""}${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
-    const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("");
-    const nav = slides.length < 2 ? "" : `<div class="hero-nav"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button>
-      ${slides.map((_, i) => `<button type="button" class="hero-dot" data-hero-dot="${i}" aria-label="Slide ${i + 1}" aria-current="${i === 0}"></button>`).join("")}
-      <button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></div>`;
+    const bg = (i) => `${slides[i].cls ? " " + slides[i].cls : ""}${slides[i].champ ? " champ-slide" : ""}${slides[i].custom ? " custom" : ""}${pic(i) ? ` photo" style="--team:${esc(slides[i].c)};--photo:${bgUrl(pic(i))}${pos(slides[i].focus)}` : `" style="--team:${esc(slides[i].c)}`}`;
+    const confetti = `<div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--d:${(k * 0.53) % 6}s;--t:${5 + (k % 5)}s;--c:${["#ffd666", "#ff6f00", "#fff", "#3498db", "#e74c3c", "#27ae60"][k % 6]}"></i>`).join("")}</div>`;
+    const tabs = slides.length < 2 ? "" : `<div class="hero-tabs"><div class="hero-tablist" role="tablist" aria-label="Highlights">
+      ${slides.map((x, i) => `<button type="button" role="tab" class="hero-tab" data-hero-dot="${i}" aria-selected="${i === 0}" aria-current="${i === 0}"><b>${String(i + 1).padStart(2, "0")}</b><span>${esc(x.nav || "Highlight")}</span></button>`).join("")}</div>
+      <span class="hero-arrows"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button><button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></span></div>`;
     return `<section class="hero band" aria-roledescription="carousel" aria-label="Highlights">
-      <div class="hero-track">${slides.map((x, i) => `<div class="top slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.champ ? `<div class="confetti" aria-hidden="true">${confetti}</div>` : ""}${x.body}</div>`).join("")}</div>
-      ${nav}</section>`;
+      <div class="hero-track">${slides.map((x, i) => `<div class="slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.champ ? confetti : ""}${x.body}</div>`).join("")}</div>
+      ${tabs}</section>`;
   }
 
   // Moves on every 6 seconds; waits while the pointer is over it, and stops once someone swipes or taps the arrows.
@@ -486,19 +499,33 @@
     const el = app.querySelector(".hero");
     const track = el && el.querySelector(".hero-track");
     if (!track || track.children.length < 2) return;
-    const n = track.children.length, dots = [...el.querySelectorAll(".hero-dot")];
+    const n = track.children.length, tabs = [...el.querySelectorAll(".hero-tab")], bar = el.querySelector(".hero-tabs");
     const at = () => Math.round(track.scrollLeft / track.clientWidth);
-    track.addEventListener("scroll", () => dots.forEach((d, k) => d.setAttribute("aria-current", String(k === at()))), { passive: true });
+    track.addEventListener("scroll", () => {
+      const i = at();
+      tabs.forEach((d, k) => { d.setAttribute("aria-current", String(k === i)); d.setAttribute("aria-selected", String(k === i)); });
+      if (bar && tabs[i] && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: tabs[i].offsetLeft - 12, behavior: "smooth" });
+    }, { passive: true });
     let hover = false, stopped = false;
     el.go = (i) => track.scrollTo({ left: ((i + n) % n) * track.clientWidth, behavior: "smooth" });
-    el.stop = () => (stopped = true);
-    el.addEventListener("mouseenter", () => (hover = true));
-    el.addEventListener("mouseleave", () => (hover = false));
-    el.addEventListener("focusin", () => (hover = true));
-    el.addEventListener("focusout", () => (hover = false));
+    el.stop = () => { stopped = true; el.classList.add("paused"); };
+    el.addEventListener("mouseenter", () => { hover = true; el.classList.add("paused"); });
+    el.addEventListener("mouseleave", () => { hover = false; if (!stopped) el.classList.remove("paused"); });
+    el.addEventListener("focusin", () => { hover = true; el.classList.add("paused"); });
+    el.addEventListener("focusout", () => { hover = false; if (!stopped) el.classList.remove("paused"); });
     track.addEventListener("touchstart", el.stop, { passive: true });
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
-      heroTimer = setInterval(() => { if (!hover && !stopped && !document.hidden) el.go(at() + 1); }, 6000);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) el.classList.add("paused");
+    else heroTimer = setInterval(() => { if (!hover && !stopped && !document.hidden) el.go(at() + 1); }, 6000);
+  }
+
+  // A strip of big type that scrolls past: what is on next, then what just finished.
+  function marquee() {
+    const next = ALL.filter((g) => !g.played).slice(0, 4).map((g) => `${stageOf(g)} · ${day(g.date)} · ${short(g.home)} vs ${short(g.away)} · ${time(g.date)}`);
+    const last = ALL.filter((g) => g.played).slice(-4).reverse().map((g) => `Final · ${short(g.home)} ${g.score[0]}–${g.score[1]} ${short(g.away)}`);
+    const items = [...next, ...last];
+    if (!items.length) return "";
+    const row = items.map((t) => `<b>${esc(t)}</b><i class="mq-dot"></i>`).join("");
+    return `<div class="marquee band" aria-hidden="true"><div class="mq-track"><span>${row}</span><span>${row}</span></div></div>`;
   }
 
   // ---------- playoffs & awards ----------
@@ -715,14 +742,15 @@
       };
       const tile = (label, key, unit) => {
         const s = leadersIn(key, 1)[0];
-        return s ? `<a class="card ltile" href="${plink(s.p)}"><span class="label">${label}</span>
-          <span class="ltile-val num">${avg(s.t[key], s.gp)}<small>${unit}</small></span>
+        return s ? `<a class="ltile" style="--c:${esc(TEAMS[s.p.team].color)}" href="${plink(s.p)}"><span class="lt-top"><span class="tape sm">${label}</span>${logo(s.p.team)}</span>
+          <b class="ltile-val">${avg(s.t[key], s.gp)}<small>${unit}</small></b>
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
       const autos = { ...heroSlides(lastRound), league: titleSlide(), gotw: feature ? gotwSlide(feature) : null };
       const order = C().slides && C().slides.length ? C().slides : DEFAULT_ORDER;
       const slides = order.filter(showing).map((s) => (s.auto ? autos[s.auto] : customSlide(s))).filter(Boolean);
       return `${hero(slides.length ? slides : [autos.league])}
+        ${marquee()}
         ${signupBand()}
         ${nextRound.length ? `<section>${sh(`Coming up`, "#games", "All games")}<p class="sub">${esc(stageOf(nextRound[0]))} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(nextRound[0].venue || L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
         <div class="two">
@@ -786,7 +814,7 @@
       return head(`${L.season} · ${teamNames.length} teams`, "Teams") + `<section class="team-grid">${TABLE.map((r) => {
         const t = TEAMS[r.team];
         return `<a class="card tcard" style="--c:${esc(t.color)}" href="${tlink(r.team)}">
-          <div class="tcard-top">${logo(r.team, "lg")}<span class="label">${ordinal(r.rank)} · ${r.w}-${r.l}</span></div>
+          <div class="tcard-top">${logo(r.team, "lg")}<span class="rank-sticker" aria-label="${ordinal(r.rank)} place, ${r.w}-${r.l}"><b>${r.rank}</b><small>${r.w}-${r.l}</small></span></div>
           <div class="tcard-body"><b>${esc(r.team)}</b><span class="label">${esc(t.short)} · Captain ${esc(ROSTERS[r.team][0].name)}</span></div>
           <div class="mini"><div><b class="num">${r.ppg.toFixed(1)}</b><span class="label">PPG</span></div><div><b class="num">${r.oppg.toFixed(1)}</b><span class="label">OPPG</span></div><div><b class="num">${r.streak || "–"}</b><span class="label">Strk</span></div></div>
         </a>`;
@@ -804,12 +832,11 @@
         : `<section class="cards">${ROSTERS[team].map((p) => {
             const s = SEASON[p.id];
             const [first, last] = nameParts(p.name);
-            return `<a class="card pcard" style="--team:${esc(t.color)}" href="${plink(p)}">
-              ${p.captain ? `<span class="chip cap">Captain</span>` : ""}
-              <span class="jersey">${esc(p.no)}${avatar(p)}</span>
-              <span class="nm"><small>${esc(first)}</small>${esc(last)}</span>
-              <span class="label">${[p.pos, p.ht && p.ht + " cm"].filter(Boolean).map(esc).join(" · ")}</span>
-              <div class="mini"><div><b class="num">${avg(s.t.pts, s.gp)}</b><span class="label">PPG</span></div><div><b class="num">${avg(s.t.reb, s.gp)}</b><span class="label">RPG</span></div><div><b class="num">${avg(s.t.ast, s.gp)}</b><span class="label">APG</span></div></div>
+            return `<a class="pcard" style="--c:${esc(t.color)}" href="${plink(p)}">
+              <span class="pc-field"><b class="pc-no">${esc(p.no)}</b>${p.captain ? `<span class="tape sm">Captain</span>` : ""}<span class="pc-face">${avatar(p)}</span></span>
+              <span class="pc-name"><small>${esc(first)}</small>${esc(last)}</span>
+              <span class="pc-meta">${[p.pos, p.ht && p.ht + " cm"].filter(Boolean).map(esc).join(" · ") || esc(short(p.team))}</span>
+              <span class="pc-stats"><span><b>${avg(s.t.pts, s.gp)}</b>PPG</span><span><b>${avg(s.t.reb, s.gp)}</b>RPG</span><span><b>${avg(s.t.ast, s.gp)}</b>APG</span></span>
             </a>`;
           }).join("")}</section>`;
       return `<section class="top band" style="--team:${esc(t.color)}"><span class="watermark" aria-hidden="true">${esc(t.logo)}</span>
@@ -1011,11 +1038,12 @@
     const done = ALL.filter((g) => g.played).slice(-8).reverse();
     const card = (g, sep) => {
       const status = g.played ? "Final" : g.live ? "Live" : `${wkday(g.date)} ${time(g.date)}`;
+      const soon = g.played ? "" : " soon";
       const line = (t, i) => {
         const lose = g.played && g.score[i] < g.score[1 - i];
         return `<span class="tk-row${lose ? " lose" : ""}">${logo(t)}${esc(short(t))}<b>${g.played ? g.score[i] : g.live ? g.live[i] : record(t)}</b></span>`;
       };
-      return `<a class="tk${sep ? " sep" : ""}${g.live ? " on-air" : ""}" href="#game/${g.id}"><span class="tk-status">${esc(status)}</span>${line(g.home, 0)}${line(g.away, 1)}</a>`;
+      return `<a class="tk${sep ? " sep" : ""}${g.live ? " on-air" : ""}" href="#game/${g.id}"><span class="tk-status${soon}">${esc(status)}</span>${line(g.home, 0)}${line(g.away, 1)}</a>`;
     };
     return [...live.map((g) => card(g)), ...coming.map((g) => card(g)), ...done.map((g, k) => card(g, k === 0 && (live.length || coming.length)))].join("");
   }
@@ -1113,7 +1141,7 @@
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
     : `<span class="src">Sample data · live stats appear once the league is on hoopr.id</span>`;
-  document.getElementById("footer").innerHTML = `<div class="in"><span>${[L.name, L.city, L.founded && "Since " + L.founded].filter(Boolean).map(esc).join(" · ")}</span>${src}${L.email ? `<a href="mailto:${esc(L.email)}">${esc(L.email)}</a>` : ""}</div>`;
+  document.getElementById("footer").innerHTML = `<div class="wordmark" aria-hidden="true">${esc(L.name)}</div><div class="in"><span>${[L.name, L.city, L.founded && "Since " + L.founded].filter(Boolean).map(esc).join(" · ")}</span>${src}${L.email ? `<a href="mailto:${esc(L.email)}">${esc(L.email)}</a>` : ""}</div>`;
 
   const saved = store.get("theme", null);
   if (saved) document.documentElement.dataset.theme = saved;

@@ -49,29 +49,34 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 
 ## Design (settled with the owner after several rounds)
 
-NBA.com-style league site, modern and roomy. **White by default** (owner's request, Oct 2026): white page, white top bar, score
-strip, phone tab bar and footer (colour variables `--bar`, `--bar-ink`, `--strip`…), cards outlined with a hairline; it does NOT follow a
-phone's dark mode, and dark is only an opt-in toggle (stored in the browser). The Home slideshow stays dark with gold as the one
-dark highlight. Older notes below that say "black masthead" describe the earlier design: slim score strip, team-colour banners
-with faint court lines, Barlow Condensed capitals for headlines and numbers, rounded cards with soft
-shadows, pill tabs. Home has five blocks: a hero slideshow (a black-and-gold championship banner: "Chase for the crown" with the top four, "Road to the title" in the playoffs, the champion with confetti once crowned or once every game is played; then Game of the Week, the
-closest finish of the last round, the scoring leader, first place, the latest league post; auto-advances every 6s,
-photos from `league.photos` in `data.js` go behind the slides), this
-week's games, standings beside last week's results, league leader tiles, news. On phones a bottom tab bar
-(Home, Games, Standings, Stats, More) replaces the top menu, Home rows swipe sideways, and table name
-columns stay pinned. The owner rejected both a busier version and a plainer one; keep to this middle.
+**A matchday programme** (owner, Nov 2026: "dull and too AI, where's the creative design"). The site is made of arena paper: games are
+ticket stubs, players are trading cards, the league table is a scoreboard, the top banner is a set of posters. Keep that idea; do not slide
+back to generic white cards with soft shadows. White page by default (owner's earlier request): it does NOT follow a phone's dark mode, and
+dark is only an opt-in toggle stored in the browser.
+
+- **Signature moves**: heavy slab headlines (Alfa Slab One) with a yellow marker run under section titles and a tilted yellow label behind
+  page titles, with the season stamped huge and hollow ("S7") behind them; yellow torn "tape" for stage labels; hard offset shadows
+  (`--shadow`, no blur) and 2px black outlines; a black score strip on top (upcoming games first, yellow times); a scrolling yellow marquee under
+  the slideshow; the league's name outlined across the footer.
+- **Home slideshow** (`hero()` in `app.js`): each slide is a poster. Matchups split in the two teams' colours with a yellow slash and a VS
+  or FINAL badge (`poster()`; colours too alike get gold or black via `posterColors`); scoring leader = his number huge and hollow; first place =
+  the top four as podium bars; title slide = trophy over spinning rays; champion = confetti. Underneath is a numbered tab bar (01 THE TITLE,
+  02 SEMIFINAL…) whose yellow line fills over the 6 s each slide shows. The organisers' own slides keep their picture and words.
+- **Tickets** (`gameCard`): coloured edge, tape stage label, torn stub with date and barcode. **Cards** (roster `.pcard`, home leaders `.ltile`):
+  paper cards with a striped colour field, big number, dashed dividers, a shine on hover. **Standings** (`.ladder`): black scoreboard, big
+  yellow rank numbers, last-five squares, a yellow underline sized by win percentage, a "Playoff line" tape. Other tables: black header row.
+- Colours: `--hl` yellow `#ffc933` is the house colour for tape, marker, buttons and the marquee; `--edge`/`--pop-c` black outlines and shadows;
+  `--ticket` warm paper. Team colours do the rest. Dark toggle swaps outlines to grey and shadows to yellow.
 
 ### Type, colour and logos (Oct 2026 pass, "NBA feel")
 
 - Fonts are self-hosted in `fonts/` (Latin subsets as woff2, @font-face at the top of `styles.css`, the three main ones preloaded in
-  `index.html`), so no request leaves the site and every phone gets the same faces; Roboto is one variable file for all weights.
-  Barlow Condensed (600/700/800) for headlines, scores, numbers, team names and the nav; Roboto for body text,
-  small labels, table headers, tabs and form text (small caps in the condensed face were hard to read).
-- Hierarchy: page title (`.phead h1`) about 3.6rem max; section headers (`.sh h2`) 1.6rem with a gold bar and a hairline; card
-  titles 1.2-1.4rem; small labels 0.7rem Roboto uppercase. Keep the accent for bars, underlines and buttons only.
+  `index.html`), so no request leaves the site. **Alfa Slab One** = headlines, brand name, big numbers on tabs and badges; **Big Shoulders
+  Display** (variable 700-900) = team names, scores, table numbers, nav; **Bricolage Grotesque** (variable) = body text; **DM Mono** = small
+  labels, table headers, tags (always small caps with letter-spacing). Do not add a fifth family.
 - Accent as text on white must use `--team-ink` (a darkened accent), never `--team` (gold on white fails contrast);
-  `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners darken the
-  team colour (`--depth`) so white text stays readable on light team colours (mint, gold, grey).
+  `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners and posters darken the
+  team colour so white text stays readable on light team colours (mint, gold, grey).
 - Do not reuse the class name `link` for new things: table rows are `tr.link`; the text-button style is scoped to `button.link, a.link`.
 - Team logos (`logo()` in `app.js`): an uploaded picture if there is one (Hooperville's `img`, `pictures.teams` in `data.js`, or the
   editor's Logos tab, in that increasing priority; Hooperville's come in as `img` from `/api/team-logos`), else a designed SVG crest: the team colour plus a monogram (initials of the
