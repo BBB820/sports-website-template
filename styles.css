@@ -208,6 +208,8 @@ a.card:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--pop
   font: 400 1.35rem/1 var(--slab); text-transform: uppercase; transform: rotate(-9deg); box-shadow: 5px 5px 0 rgb(0 0 0 / .45); }
 .pz-foot { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px max(var(--gutter), calc(50vw - 584px + var(--gutter)));
   background: #0c0c0d; border-top: 3px solid var(--hl); font: 500 .74rem/1.5 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.pz-info { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pz-info .count { margin-left: 0; }
 .pz-info b { color: var(--hl); font-weight: 500; }
 .pz-foot .hero-link { margin: 0; padding: 9px 16px 8px; flex: none; font-size: .95rem; }
 .count { font: 800 .85rem/1 var(--display); letter-spacing: .06em; background: var(--hl); color: #111418; padding: 4px 10px 3px; border-radius: 4px; white-space: nowrap; margin-left: 8px; }
@@ -585,7 +587,7 @@ main > .back:first-child { margin-top: 40px; }
   .pz-score { font-size: 4.4rem; }
   .pz-side { min-height: 170px; }
   .pz-vs { width: 74px; height: 74px; margin: -37px 0 0 -37px; font-size: 1.05rem; top: 49%; }
-  .pz-foot { flex-wrap: wrap; gap: 10px; padding: 12px var(--gutter) 14px; font-size: .68rem; }
+  .pz-foot { flex-wrap: wrap; gap: 12px; padding: 14px var(--gutter) 16px; font-size: .68rem; }
   .pz-foot .hero-link { width: 100%; justify-content: center; }
 
   .ld-no { font-size: 14rem; right: -10%; top: 36%; }
