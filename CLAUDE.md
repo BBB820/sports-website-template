@@ -73,7 +73,7 @@ White page by default (owner's earlier request): it does NOT follow a phone's da
 ### Type, colour and logos (Oct 2026 pass, "NBA feel")
 
 - Fonts are self-hosted in `fonts/` (`manrope-var.woff2`, @font-face at the top of `styles.css`, preloaded in `index.html`), so no
-  request leaves the site. Only two families: **Manrope** (variable 400-800), the only family, for everything. Headings are sentence case at weight 700 with normal letter-spacing (owner, Nov 2026: "font is too tight"); small uppercase labels only for metadata. Do not add a second family or go back to condensed type.
+  request leaves the site. One family: **Manrope** (variable 400-800), the only family, for everything. Headings are sentence case at weight 700 with normal letter-spacing (owner, Nov 2026: "font is too tight"); small uppercase labels only for metadata. Do not add a second family or go back to condensed type.
   Class names to avoid reusing: `.seed` is the bracket's seed number (the Home panel uses `.seed-row`); table rows are `tr.link`.
 - Accent as text on white must use `--team-ink` (a darkened accent), never `--team` (gold on white fails contrast);
   `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners and posters darken the
