@@ -49,31 +49,33 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
 
 ## Design (settled with the owner after several rounds)
 
-**A matchday programme** (owner, Nov 2026: "dull and too AI, where's the creative design"). The site is made of arena paper: games are
-ticket stubs, players are trading cards, the league table is a scoreboard, the top banner is a set of posters. Keep that idea; do not slide
-back to generic white cards with soft shadows. White page by default (owner's earlier request): it does NOT follow a phone's dark mode, and
-dark is only an opt-in toggle stored in the browser.
+**Professional, modern, restrained** (owner, Nov 2026: the earlier "matchday programme" with tape, tickets, slab type and marquee "looks
+kiddish/childish -- make it professional modern"; before that "dull and too AI"). Do not bring back playful devices: no tilted or taped labels,
+hard offset shadows, barcodes, ticket notches, marquee, confetti, emoji, clip-art trophies or marker highlights. Think broadcast graphics and
+a good sports app: flat white surfaces, 1px hairline borders (`--hair`), almost no shadow, generous whitespace, tabular numerals, thin motion.
+White page by default (owner's earlier request): it does NOT follow a phone's dark mode, and dark is only an opt-in toggle stored in the browser.
 
-- **Signature moves**: heavy slab headlines (Alfa Slab One) with a yellow marker run under section titles and a tilted yellow label behind
-  page titles, with the season stamped huge and hollow ("S7") behind them; yellow torn "tape" for stage labels; hard offset shadows
-  (`--shadow`, no blur) and 2px black outlines; a black score strip on top (upcoming games first, yellow times); a scrolling yellow marquee under
-  the slideshow; the league's name outlined across the footer.
-- **Home slideshow** (`hero()` in `app.js`): each slide is a poster. Matchups split in the two teams' colours with a yellow slash and a VS
-  or FINAL badge (`poster()`; colours too alike get gold or black via `posterColors`); scoring leader = his number huge and hollow; first place =
-  the top four as podium bars; title slide = trophy over spinning rays; champion = confetti. Underneath is a numbered tab bar (01 THE TITLE,
-  02 SEMIFINAL…) whose yellow line fills over the 6 s each slide shows. The organisers' own slides keep their picture and words.
-- **Tickets** (`gameCard`): coloured edge, tape stage label, torn stub with date and barcode. **Cards** (roster `.pcard`, home leaders `.ltile`):
-  paper cards with a striped colour field, big number, dashed dividers, a shine on hover. **Standings** (`.ladder`): black scoreboard, big
-  yellow rank numbers, last-five squares, a yellow underline sized by win percentage, a "Playoff line" tape. Other tables: black header row.
-- Colours: `--hl` yellow `#ffc933` is the house colour for tape, marker, buttons and the marquee; `--edge`/`--pop-c` black outlines and shadows;
-  `--ticket` warm paper. Team colours do the rest. Dark toggle swaps outlines to grey and shadows to yellow.
+- **Palette**: near-black `--ink #0b0d12`, white, cool greys; gold is the only accent and stays small (`--hl #e3b13a` on dark surfaces, `--team`
+  = the league colour for the nav underline and rules, `--team-ink` for gold-ish text on white). Team colours live in logos, thin top rules on
+  Home leader tiles, banner glows and roster/team card colour fields, never as big flat fills behind body text.
+- **Home banner** (`hero()` in `app.js`) is the one dark, cinematic moment: near-black with a soft glow in the team's colour. Matchups
+  (`poster()`): the two teams either side of a hairline, each with a soft glow in its own colour, large logo, condensed name, a small VS or FINAL
+  pill in the middle, an info bar underneath with the button. Title slide: "Road to the title" (or "Chase for the crown" / the champion)
+  beside a small "Top seeds" table. Scoring leader: his number huge and faint, a row of four stats divided by hairlines. First place: the top four
+  as flat bars. Numbered tab bar underneath (01 THE TITLE, 02 SEMIFINAL…) with a thin line that fills over the 6 s each slide shows.
+- **Games** (`gameCard`, class `ticket` kept for the code): white card, stage in small caps, two team rows with logos, big tabular scores, a quiet
+  footer with date and a "Box score →" link. **Cards** (roster `.pcard`, home `.ltile`, teams `.tcard`): white cards with a colour field or a
+  thin team-colour top rule. **Tables**: light grey header row in small caps, hairline rows. **Standings** (`.ladder`): a clean table with large
+  rank numbers, last-five squares and a "Playoff line" band. **Tabs** (`.seg`): a grey segmented control with a white active pill.
+- Section heads: condensed title over a hairline with a quiet "ALL GAMES →" link; page heads: eyebrow + large condensed title. Buttons: solid
+  near-black (`.btn`) or white on dark (`.hero-link`); outline for secondary.
 
 ### Type, colour and logos (Oct 2026 pass, "NBA feel")
 
-- Fonts are self-hosted in `fonts/` (Latin subsets as woff2, @font-face at the top of `styles.css`, the three main ones preloaded in
-  `index.html`), so no request leaves the site. **Alfa Slab One** = headlines, brand name, big numbers on tabs and badges; **Big Shoulders
-  Display** (variable 700-900) = team names, scores, table numbers, nav; **Bricolage Grotesque** (variable) = body text; **DM Mono** = small
-  labels, table headers, tags (always small caps with letter-spacing). Do not add a fifth family.
+- Fonts are self-hosted in `fonts/` (Latin subsets as woff2, @font-face at the top of `styles.css`, both preloaded in `index.html`), so no
+  request leaves the site. Only two families: **Big Shoulders Display** (variable 700-900) for team names, scores, big numbers, headlines and the
+  brand name; **Inter** (variable 400-700) for everything else, with small uppercase letter-spaced labels for metadata. Do not add a third family.
+  Class names to avoid reusing: `.seed` is the bracket's seed number (the Home panel uses `.seed-row`); table rows are `tr.link`.
 - Accent as text on white must use `--team-ink` (a darkened accent), never `--team` (gold on white fails contrast);
   `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners and posters darken the
   team colour so white text stays readable on light team colours (mint, gold, grey).

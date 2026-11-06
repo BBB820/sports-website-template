@@ -3,12 +3,12 @@
 (() => {
   const { S, ALL, TEAMS, teamNames, PLAYERS, gameKey, stageOf, short, day, esc, memo, field, logo } = window.CBC;
   const AUTO = {
-    league: ["🏆", "Championship banner", "The race for the title, the playoffs, then the champion"],
-    gotw: ["🏀", "Game of the Week", "The coming round's best matchup, or the next playoff game"],
-    closest: ["⏱", "Closest finish", "Last round's closest game, with a box score link"],
-    leader: ["🔥", "Top scorer", "The league's points leader"],
-    standings: ["🥇", "First place", "The team on top, with the top four"],
-    news: ["📰", "Latest story", "Your newest article, or the newest league post"]
+    league: ["Title", "Championship banner", "The race for the title, the playoffs, then the champion"],
+    gotw: ["Game", "Game of the Week", "The coming round's best matchup, or the next playoff game"],
+    closest: ["Close", "Closest finish", "Last round's closest game, with a box score link"],
+    leader: ["Scorer", "Top scorer", "The league's points leader"],
+    standings: ["Top 4", "First place", "The team on top, with the top four"],
+    news: ["News", "Latest story", "Your newest article, or the newest league post"]
   };
   const LINKS = [["none", "No link"], ["article", "An article"], ["album", "A photo album"], ["game", "A game (box score)"], ["team", "A team"], ["player", "A player"], ["signup", "The sign-up page"], ["url", "A web address"]]
     .filter(([v]) => v !== "signup" || (S.signup && S.signup.open));
@@ -101,7 +101,7 @@
       <button type="button" class="btn" data-new="slide">+ New slide</button></div><div class="card ad-list">${rows}</div>`;
   }
   function articleList() {
-    const rows = doc.articles.map((a, i) => `<div class="ad-row${a.published ? "" : " off"}">${a.image ? `<span class="ad-thumb"><img src="${esc(a.image)}" alt=""></span>` : `<span class="ad-thumb auto">📰</span>`}
+    const rows = doc.articles.map((a, i) => `<div class="ad-row${a.published ? "" : " off"}">${a.image ? `<span class="ad-thumb"><img src="${esc(a.image)}" alt=""></span>` : `<span class="ad-thumb auto">News</span>`}
       <div class="ad-txt"><b>${esc(a.title)}</b><small>${esc(day(a.date + "T12:00"))} · ${a.published ? "On the site" : "Draft, not on the site"}</small></div>
       ${a.published ? `<a class="link" href="#article/${esc(a.id)}">View</a>` : ""}<button type="button" class="link ad-edit" data-edit="article" data-i="${i}">Edit</button></div>`).join("");
     return `<div class="ad-head"><p class="note">Stories for the News page. Link them from a slide, or to a game.</p>
@@ -138,7 +138,7 @@
   }
 
   function albumList() {
-    const rows = doc.albums.map((a, i) => `<div class="ad-row${a.published && a.photos.length ? "" : " off"}">${a.photos[0] ? `<span class="ad-thumb"><img src="${esc(a.photos[0].src)}" alt=""></span>` : `<span class="ad-thumb auto">📷</span>`}
+    const rows = doc.albums.map((a, i) => `<div class="ad-row${a.published && a.photos.length ? "" : " off"}">${a.photos[0] ? `<span class="ad-thumb"><img src="${esc(a.photos[0].src)}" alt=""></span>` : `<span class="ad-thumb auto">Photos</span>`}
       <div class="ad-txt"><b>${esc(a.title)}</b><small>${a.photos.length} photo${a.photos.length === 1 ? "" : "s"} · ${a.published && a.photos.length ? "On the site" : "Not on the site"}</small></div>
       ${a.published && a.photos.length ? `<a class="link" href="#album/${esc(a.id)}">View</a>` : ""}<button type="button" class="link ad-edit" data-edit="album" data-i="${i}">Edit</button></div>`).join("");
     return `<div class="ad-head"><p class="note">Photo albums for the Photos page. Link one from a slide.</p>
