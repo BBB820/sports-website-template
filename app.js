@@ -402,7 +402,7 @@
           <p class="pd-meta">${meta}</p>
           <dl class="ld-stats"><div><dt>Record</dt><dd>${top.w}-${top.l}</dd></div><div><dt>PPG</dt><dd>${top.ppg.toFixed(1)}</dd></div><div><dt>OPPG</dt><dd>${top.oppg.toFixed(1)}</dd></div><div><dt>Last 5</dt><dd>${top.last5.filter((x) => x === "W").length}-${top.last5.filter((x) => x === "L").length}</dd></div></dl>
           <a class="hero-link" href="#standings">Standings →</a></div>
-        <ol class="pd-bars">${four.map((r) => `<li style="--h:${Math.round(96 + 150 * r.w / maxW)}px;--c:${esc(TEAMS[r.team].color)}"><a href="${tlink(r.team)}" aria-label="${esc(r.team)}, ${r.w}-${r.l}">${logo(r.team, "md")}<b>${esc(short(r.team))}</b><span class="pd-bar"><i>${r.rank}</i></span><em>${r.w}-${r.l}</em></a></li>`).join("")}</ol></div>` };
+        <ol class="pd-bars">${four.map((r) => `<li style="--h:${Math.round(96 + 150 * r.w / maxW)}px;--c:${esc(TEAMS[r.team].color)};--fg:${readable(TEAMS[r.team].color)}"><a href="${tlink(r.team)}" aria-label="${esc(r.team)}, ${r.w}-${r.l}">${logo(r.team, "md")}<b>${esc(short(r.team))}</b><span class="pd-bar"><i>${r.rank}</i></span><em>${r.w}-${r.l}</em></a></li>`).join("")}</ol></div>` };
     }
     const post = newsItems().find((n) => n.article || !recapGame(n));
     if (post) out.news = { c: L.color, img: post.photo, focus: post.focus, cls: "story-slide", nav: "News", body: `<div class="st">

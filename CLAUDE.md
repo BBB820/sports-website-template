@@ -58,7 +58,7 @@ White page by default (owner's earlier request): it does NOT follow a phone's da
 - **Palette**: near-black `--ink #0b0d12`, white, cool greys; gold is the only accent and stays small (`--hl #e3b13a` on dark surfaces, `--team`
   = the league colour for the nav underline and rules, `--team-ink` for gold-ish text on white). Team colours live in logos, thin top rules on
   Home leader tiles, banner glows and roster/team card colour fields, never as big flat fills behind body text.
-- **Home banner** (`hero()` in `app.js`) is the one dark, cinematic moment: near-black with a soft glow in the team's colour. Matchups
+- **Banner and stage surfaces** (owner, Nov 2026: "make the banner white too ... light for the eyes"): white with a soft team-colour tint, via the `--stage/--on/--on-2/--on-3` tokens (dark only under the dark toggle). The Home banner (`hero()` in `app.js`) is white with a faint glow in the team's colour. Matchups
   (`poster()`): the two teams either side of a hairline, each with a soft glow in its own colour, large logo, condensed name, a small VS or FINAL
   pill in the middle, an info bar underneath with the button. Title slide: "Road to the title" (or "Chase for the crown" / the champion)
   beside a small "Top seeds" table. Scoring leader: his number huge and faint, a row of four stats divided by hairlines. First place: the top four
@@ -72,9 +72,8 @@ White page by default (owner's earlier request): it does NOT follow a phone's da
 
 ### Type, colour and logos (Oct 2026 pass, "NBA feel")
 
-- Fonts are self-hosted in `fonts/` (Latin subsets as woff2, @font-face at the top of `styles.css`, both preloaded in `index.html`), so no
-  request leaves the site. Only two families: **Big Shoulders Display** (variable 700-900) for team names, scores, big numbers, headlines and the
-  brand name; **Inter** (variable 400-700) for everything else, with small uppercase letter-spaced labels for metadata. Do not add a third family.
+- Fonts are self-hosted in `fonts/` (`manrope-var.woff2`, @font-face at the top of `styles.css`, preloaded in `index.html`), so no
+  request leaves the site. Only two families: **Manrope** (variable 400-800), the only family, for everything. Headings are sentence case at weight 700 with normal letter-spacing (owner, Nov 2026: "font is too tight"); small uppercase labels only for metadata. Do not add a second family or go back to condensed type.
   Class names to avoid reusing: `.seed` is the bracket's seed number (the Home panel uses `.seed-row`); table rows are `tr.link`.
 - Accent as text on white must use `--team-ink` (a darkened accent), never `--team` (gold on white fails contrast);
   `--on-team` is the text colour on top of the accent (set from the accent's brightness in `app.js`). Banners and posters darken the
