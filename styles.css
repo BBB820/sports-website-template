@@ -163,7 +163,8 @@ a.more:hover i { transform: translateX(3px); }
 .slide.photo { background: linear-gradient(90deg, color-mix(in srgb, var(--stage) 94%, transparent), color-mix(in srgb, var(--stage) 66%, transparent) 62%, color-mix(in srgb, var(--stage) 14%, transparent)), var(--photo) var(--pos, center) / cover no-repeat, var(--stage); }
 .slide > * { position: relative; z-index: 1; }
 /* A slide with a photo: the words sit on a soft white fade, the picture stays clear on the other side */
-.slide.photo.custom { background: linear-gradient(90deg, color-mix(in srgb, var(--stage) 96%, transparent) 0, color-mix(in srgb, var(--stage) 88%, transparent) 34%, color-mix(in srgb, var(--stage) 0%, transparent) 68%), var(--photo) var(--pos, center) / cover no-repeat, var(--stage); }
+.slide.photo.custom .cs { max-width: min(46%, 540px); text-shadow: 0 0 18px color-mix(in srgb, var(--stage) 85%, transparent), 0 0 3px color-mix(in srgb, var(--stage) 70%, transparent); }
+.slide.photo.custom { background: linear-gradient(90deg, color-mix(in srgb, var(--stage) 92%, transparent) 0, color-mix(in srgb, var(--stage) 62%, transparent) 26%, color-mix(in srgb, var(--stage) 0%, transparent) 52%), var(--photo) var(--pos, center) / cover no-repeat, var(--stage); }
 .slide .eyebrow, .pz .eyebrow { color: var(--accent-text); }
 .hero-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 28px; padding: 14px 24px; background: var(--on); color: var(--stage); border-radius: 10px; font: 600 .92rem/1 var(--body); transition: background .12s, transform .12s; }
 .hero-link:hover { background: color-mix(in srgb, var(--on) 82%, var(--stage)); transform: translateY(-1px); }
@@ -601,9 +602,11 @@ td.l small.pt { display: none; }
   .pz-foot { position: absolute; left: 0; right: 0; bottom: 0; flex-wrap: wrap; gap: 10px; padding: 12px var(--gutter) 14px; font-size: .78rem; }
   .pz-foot .hero-link { width: 100%; justify-content: center; }
   .pd-bars { display: none; }
-  .slide.photo.custom { align-content: end; padding-bottom: 24px; background: linear-gradient(0deg, color-mix(in srgb, var(--stage) 98%, transparent) 0, color-mix(in srgb, var(--stage) 96%, transparent) 46%, color-mix(in srgb, var(--stage) 0%, transparent) 76%), var(--photo) var(--pos, center) / cover no-repeat, var(--stage); }
+  .slide.photo.custom { align-content: end; padding-bottom: 24px; background: linear-gradient(0deg, color-mix(in srgb, var(--stage) 95%, transparent) 0, color-mix(in srgb, var(--stage) 92%, transparent) 30%, color-mix(in srgb, var(--stage) 0%, transparent) 56%), var(--photo) var(--pos, center) / cover no-repeat, var(--stage); }
+  .slide.photo.custom .cs { max-width: none; }
   .slide.photo.custom .cs-text { display: none; }
-  .slide.photo.custom .cs-title { font-size: 2rem; margin-top: 8px; }
+  .slide.photo.custom .cs-title { font-size: 1.75rem; margin-top: 6px; line-height: 1.12; }
+  .slide.photo.custom .hero-link { padding: 10px 18px; margin-top: 14px; }
   .ld-no { font-size: 10rem; top: 30%; }
 
   .games-grid { gap: 18px; }
