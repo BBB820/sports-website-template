@@ -155,18 +155,30 @@ async function findSlug(leagues) {
   return match ? match.slug : null;
 }
 
-async function build() {
+// "Season 6", "6" or "season-6" all name Season 6; matched on the season's number (or its whole name).
+const seasonNumber = (s) => { const m = /(\d+)\s*$/.exec(String(s || "")); return m ? m[1] : null; };
+const matchSeason = (season, key) => {
+  const k = String(key).trim().toLowerCase().replace(/-/g, " ");
+  return season.name.toLowerCase() === k || (seasonNumber(k) !== null && seasonNumber(season.name) === seasonNumber(k));
+};
+
+async function build(key) {
   const slug = await findSlug(await connect());
   if (!slug) return null;
   const league = await get(`/leagues/${encodeURIComponent(slug)}`);
-  // The current season: the newest one that has teams.
-  const season = (league.seasons || []).find((s) => s.teams && s.teams.length) || null;
+  // Seasons with teams, newest first as Hooperville lists them. The first is the current one, shown by default;
+  // ?season=6 picks an earlier one (owner, Nov 2026: "Add Season 6 too").
+  const withTeams = (league.seasons || []).filter((s) => s.teams && s.teams.length);
+  const current = withTeams[0] || null;
+  const season = key ? withTeams.find((s) => matchSeason(s, key)) || null : current;
   if (!season) return null;
 
   const names = season.teams.map((t) => t.name);
   const codes = shortCodes(names);
   const details = await inBatches(season.teams, 4, (t) => get(`/teams/${t.id}`));
   const logoPaths = await get("/team-logos").catch(() => ({}));
+  // Every team's logo can be served, whichever season was read first.
+  for (const [id, p] of Object.entries(logoPaths)) if (/^[0-9a-f-]{36}$/.test(id)) registerLogo(id, p);
 
   const teams = {};
   season.teams.forEach((t, i) => {
@@ -253,6 +265,7 @@ async function build() {
   const leagueLogoUrl = (await leagueLogo(slug)) || pictureOf(league);
   return {
     playoffs,
+    seasons: withTeams.map((s) => ({ name: s.name, key: seasonNumber(s.name) || s.name, current: s === current, shown: s === season })),
     source: { name: BASE === OLD_ADDRESS ? "Hooperville" : new URL(BASE).host, league: league.name, slug, season: season.name, url: `${BASE}/l/${slug}`, updated: new Date().toISOString() },
     league: { name: league.name, season: season.name, city: league.location || "", ...(leagueLogoUrl ? { img: leagueLogoUrl } : {}) },
     teams,
@@ -260,23 +273,26 @@ async function build() {
   };
 }
 
-let cache = null;
-let cachedAt = 0;
-let pending = null;
+// One cache entry per season asked for ("" is the current season). A season that is over changes rarely,
+// but it is cached the same two minutes so a correction made in Hooperville shows up soon.
+const caches = new Map();
 
-/** The league as site data, or null when Hooperville has no matching league. Cached for two minutes. */
-async function siteData() {
-  if (cachedAt && Date.now() - cachedAt < CACHE_MS) return cache;
-  if (!pending) {
-    pending = build()
-      .then((data) => { cache = data; cachedAt = Date.now(); return data; })
-      .finally(() => { pending = null; });
+/** The league as site data for a season (default the current one), or null when there is no such league or season. */
+async function siteData(key = "") {
+  key = String(key || "").slice(0, 40);
+  let c = caches.get(key);
+  if (!c) { c = { data: null, at: 0, pending: null }; if (caches.size < 20) caches.set(key, c); }
+  if (c.at && Date.now() - c.at < CACHE_MS) return c.data;
+  if (!c.pending) {
+    c.pending = build(key)
+      .then((data) => { c.data = data; c.at = Date.now(); return data; })
+      .finally(() => { c.pending = null; });
   }
   try {
-    return await pending;
+    return await c.pending;
   } catch (err) {
     // Hooperville unreachable: keep serving the last good copy if there is one.
-    if (cachedAt) return cache;
+    if (c.at) return c.data;
     throw err;
   }
 }

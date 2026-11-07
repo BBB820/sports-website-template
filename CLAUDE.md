@@ -28,7 +28,12 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   Since Nov 6 Hooperville's player site has an early-access lock (API answers 401 "hoopr.id is in early access" to anyone without the code; the
   stats and logos stop loading). Set `HOOPERVILLE_EARLY_CODE` (the early-access code, kept in Hooperville's gitignored `.env.early-access.txt`) on this
   site's Railway service and every request to Hooperville carries the pass cookie. Without it the site shows its last cached data or the sample.
-- `index.html` fetches `/api/site-data`; if that fails or finds no league it falls back to the sample in
+- **Seasons** (owner, Nov 2026: "Add Season 6 too"): the site shows the current season (the newest with teams) by default;
+  `?season=6` (the season's number, or its name) shows an earlier one, the whole site for that season. `/api/site-data?season=6`
+  builds it (one two-minute cache per season); the data carries `seasons` (`name`, `key`, `current`, `shown`). A picker in the
+  top bar (`.season-pick`, added in `app.js` when there are two or more seasons) reloads at `?season=N`, keeping the page
+  (Standings stays Standings) but dropping a game, team or player, which belong to one season.
+- `index.html` fetches `/api/site-data` (with `?season=` passed on); if that fails or finds no league it falls back to the sample in
   `data.js`. The footer says "Live stats from hoopr.id" or "Sample data".
 - `app.js` renders every page with hash routing: home, games, standings, stats, playoffs, teams, team/CODE,
   player/CODE-username, game/ID, news. Sample games without a box score get generated box scores that add
