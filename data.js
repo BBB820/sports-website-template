@@ -22,7 +22,22 @@ window.SITE = {
 
   // The league's own pictures, by name. They win over anything Hooperville has.
   // teams: { "Riverside Sharks": "photos/sharks-logo.png" }, players: { "Paul Rivera": "photos/paul-rivera.jpg" }
-  pictures: { teams: {}, players: {} },
+  pictures: {
+    // The Bro League team logos (owner's sheet, Nov 2026), kept in the repo so they load even if Hooperville is locked or down.
+    teams: {
+      "COCOLIFE": "logos/cocolife.webp",
+      "COFTA": "logos/cofta.webp",
+      "ELECTRO LAB": "logos/electro-lab.webp",
+      "HELIOS": "logos/helios.webp",
+      "KEYCARDS": "logos/keycards.webp",
+      "MGL": "logos/mgl.webp",
+      "PGR": "logos/pgr.webp",
+      "SILVER HORIZON": "logos/silver-horizon.webp",
+      "VIZARRO": "logos/vizarro.webp",
+      "WIPE.PH": "logos/wipe-ph.webp"
+    },
+    players: {}
+  },
 
   // Sign-ups for the next season. Set open: false to close them. Leave fee empty to hide it.
   signup: {

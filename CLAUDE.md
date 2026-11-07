@@ -37,7 +37,8 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   Also pictures: `league.photos` (banner slides and news) and `league.championPhoto` (first slide once there is a
   champion, with CSS confetti), empty until real photos are added to `photos/` (outside image
   hosts are blocked in the sandbox and in the preview, so keep pictures in the repo); `pictures.teams` / `pictures.players`
-  by name override Hooperville's.
+  by name override Hooperville's. The ten Bro League team logos are in `logos/*.webp` (cut from the owner's logo sheet, Nov 2026) and listed in `pictures.teams`,
+  so they never depend on Hooperville.
 - `signups.js` stores season sign-ups (teams and free agents) in `signups.json` under the Railway volume
   (`RAILWAY_VOLUME_MOUNT_PATH`) or `DATA_DIR`, else `.data/` (lost on redeploy). Public: `POST /api/signups`,
   `GET /api/signups/summary` (counts only). Private: `GET /api/signups` with header `x-passcode` = `SIGNUP_PASSCODE`;
