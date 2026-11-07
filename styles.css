@@ -581,6 +581,26 @@ td.l small.pt { display: none; }
   .hero-arrows { display: none; }
   .hero-tab { padding-right: 20px; }
 
+  /* Phone carousel: every slide is the same height (so the page never jumps) and the whole banner, tabs included, fits one screen. */
+  .slide { height: 400px; min-height: 0; padding: 34px var(--gutter) 28px; align-content: center; }
+  .slide.poster { padding: 0; }
+  .ts h1 { font-size: 2.4rem; margin-top: 12px; }
+  .ts .seeds { display: none; }
+  .pz { height: 100%; min-height: 0; grid-template-columns: 1fr 1fr; align-content: start; gap: 0; padding: 64px var(--gutter) 0;
+    background: radial-gradient(70% 55% at 0% 30%, color-mix(in srgb, var(--a) 18%, transparent), transparent 72%), radial-gradient(70% 55% at 100% 30%, color-mix(in srgb, var(--b) 18%, transparent), transparent 72%), var(--stage); }
+  .pz::before { left: 50%; right: auto; top: 72px; bottom: auto; width: 1px; height: 190px; background: linear-gradient(transparent, var(--edge), transparent); }
+  .pz-tape { top: 24px; }
+  .pz-side, .pz-side.l, .pz-side.r { min-height: 0; justify-items: center; text-align: center; gap: 10px; padding: 6px 4px; }
+  .pz .logo.xl { width: 68px; height: 68px; }
+  .pz-name { font-size: 1.15rem; line-height: 1.15; }
+  .pz-score { font-size: 2.9rem; }
+  .pz-rec { font-size: .68rem; }
+  .pz-vs { top: 128px; padding: 8px 12px; font-size: .64rem; }
+  .pz-foot { position: absolute; left: 0; right: 0; bottom: 0; flex-wrap: wrap; gap: 10px; padding: 12px var(--gutter) 14px; font-size: .78rem; }
+  .pz-foot .hero-link { width: 100%; justify-content: center; }
+  .pd-bars { display: none; }
+  .ld-no { font-size: 10rem; top: 30%; }
+
   .games-grid { gap: 18px; }
   .tl .pts { font-size: 1.8rem; }
   .ltiles { grid-template-columns: 1fr 1fr; gap: 16px 12px; }

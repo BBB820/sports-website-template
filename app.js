@@ -502,7 +502,9 @@
       tabs.forEach((d, k) => { d.setAttribute("aria-current", String(k === i)); d.setAttribute("aria-selected", String(k === i)); });
       if (bar && tabs[i] && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: tabs[i].offsetLeft - 12, behavior: "smooth" });
     }, { passive: true });
-    let hover = false, stopped = false;
+    let hover = false, stopped = false, seen = true;
+    // Don't rotate slides while the banner is scrolled out of sight (or mostly off the screen).
+    if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => { seen = e.intersectionRatio > 0.5; }, { threshold: [0, 0.5, 1] }).observe(el);
     el.go = (i) => track.scrollTo({ left: ((i + n) % n) * track.clientWidth, behavior: "smooth" });
     el.stop = () => { stopped = true; el.classList.add("paused"); };
     el.addEventListener("mouseenter", () => { hover = true; el.classList.add("paused"); });
@@ -511,7 +513,7 @@
     el.addEventListener("focusout", () => { hover = false; if (!stopped) el.classList.remove("paused"); });
     track.addEventListener("touchstart", el.stop, { passive: true });
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) el.classList.add("paused");
-    else heroTimer = setInterval(() => { if (!hover && !stopped && !document.hidden) el.go(at() + 1); }, 6000);
+    else heroTimer = setInterval(() => { if (!hover && !stopped && seen && !document.hidden) el.go(at() + 1); }, 6000);
   }
 
   // ---------- playoffs & awards ----------
