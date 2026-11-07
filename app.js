@@ -484,7 +484,7 @@
       ${slides.map((x, i) => `<button type="button" role="tab" class="hero-tab" data-hero-dot="${i}" aria-selected="${i === 0}" aria-current="${i === 0}"><b>${String(i + 1).padStart(2, "0")}</b><span>${esc(x.nav || "Highlight")}</span></button>`).join("")}</div>
       <span class="hero-arrows"><button type="button" class="hero-arrow" data-hero="-1" aria-label="Previous slide">‹</button><button type="button" class="hero-arrow" data-hero="1" aria-label="Next slide">›</button></span></div>`;
     return `<section class="hero band" aria-roledescription="carousel" aria-label="Highlights">
-      <div class="hero-track">${slides.map((x, i) => `<div class="slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.body}</div>`).join("")}</div>
+      <div class="hero-track" tabindex="0" role="region" aria-label="Highlight slides">${slides.map((x, i) => `<div class="slide${bg(i)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}">${x.body}</div>`).join("")}</div>
       ${tabs}</section>`;
   }
 
@@ -742,7 +742,12 @@
           <span class="ltile-who">${avatar(s.p)}<span><b>${esc(s.p.name)}</b><small>${esc(s.p.team)}</small></span></span></a>` : "";
       };
       const autos = { ...heroSlides(lastRound), league: titleSlide(), gotw: feature ? gotwSlide(feature) : null };
-      const order = C().slides && C().slides.length ? C().slides : DEFAULT_ORDER;
+      // Picture slides the organisers add in the editor win; else the league's own banner slides in data.js (current season only);
+      // else the automatic slides in the order the editor saved (or the default order).
+      const shownSeason = (S.seasons || []).find((x) => x.shown);
+      const leagueSlides = !shownSeason || shownSeason.current ? (L.slides || []) : [];
+      const saved = C().slides || [];
+      const order = saved.some((s) => !s.auto) ? saved : leagueSlides.length ? leagueSlides : saved.length ? saved : DEFAULT_ORDER;
       const slides = order.filter(showing).map((s) => (s.auto ? autos[s.auto] : customSlide(s))).filter(Boolean);
       return `${hero(slides.length ? slides : [autos.league])}
         ${signupBand()}

@@ -39,6 +39,9 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   player/CODE-username, game/ID, news. Sample games without a box score get generated box scores that add
   up to the real final score (seeded, so stable). Playoff games are kept out of standings and season stats.
 - `data.js` supplies branding (gold accent `#d4a017` on black, logo emoji, tagline, venue; no email or founding year, so the footer leaves them out) and the `signup` settings even when live (sign-ups are closed: `signup.open: false` hides the band, menu links and form).
+  The Home banner's five picture slides (owner's photos and captions, Nov 2026: semifinals, the upset, "Aldomination", the scoring champion)
+  are `league.slides` in `data.js` (same shape as editor slides; photos in `photos/`). Slides saved in the editor replace them only once the
+  organisers add a picture slide of their own; the automatic slides remain as the fallback. Update the captions as the playoffs move on.
   Also pictures: `league.photos` (banner slides and news) and `league.championPhoto` (first slide once there is a
   champion, with CSS confetti), empty until real photos are added to `photos/` (outside image
   hosts are blocked in the sandbox and in the preview, so keep pictures in the repo); `pictures.teams` / `pictures.players`

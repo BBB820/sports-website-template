@@ -17,7 +17,17 @@ window.SITE = {
     // behind the first slide once a champion is crowned. Put the files in the photos folder and list them,
     // e.g. "photos/finals.jpg". Empty means plain team colours; if one can't load, the team colour shows.
     photos: [],
-    championPhoto: ""
+    championPhoto: "",
+    // The banner slides (owner's photos and captions, Nov 2026). Same shape as slides made in the editor
+    // (label, headline, text, picture, link, button); slides saved in the editor replace these.
+    // focus = which part of the picture stays in view, as % across and % down.
+    slides: [
+      { label: "Semifinal 1", headline: "Vizarro vs Electro Lab", text: "Saturday, Nov 7", image: "photos/semi-1-vizarro-electro.webp", focus: { x: 50, y: 24 }, link: { type: "game", target: "2026-11-07T18:00|ELECTRO LAB" } },
+      { label: "Semifinal 2", headline: "Silver Horizon vs Helios", text: "Saturday, Nov 7", image: "photos/semi-2-helios-silver.webp", focus: { x: 50, y: 38 }, link: { type: "game", target: "2026-11-07T20:00|HELIOS" } },
+      { label: "Quarterfinal · Upset", headline: "Silver Horizon vs Wipe", text: "Silver Horizon edge Wipe.ph, 79–76", image: "photos/qf-upset-silver-wipe.webp", focus: { x: 50, y: 22 }, link: { type: "game", target: "2026-10-25T11:15|WIPE.PH" } },
+      { label: "Quarterfinal · Aldomination", headline: "Cofta vs Vizarro", text: "Vizarro roll, 104–76", image: "photos/qf-aldomination.webp", focus: { x: 50, y: 40 }, link: { type: "game", target: "2026-10-25T10:00|VIZARRO" } },
+      { label: "Scoring champion · Season 7", headline: "Joe Gomez De Liaño", text: "Helios · 36.2 points a game", image: "photos/scoring-champion.webp", focus: { x: 50, y: 26 }, link: { type: "player", target: "HEL-joe_gomez_de_lia_o" } }
+    ]
   },
 
   // The league's own pictures, by name. They win over anything Hooperville has.
