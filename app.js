@@ -290,14 +290,14 @@
   // The league table as a scoreboard: win-percentage bars behind the rows, the form of the last five games, and a
   // tag where the playoff line falls.
   function standingsTable(compact) {
-    const cols = compact ? 5 : 11;
+    const cols = compact ? 5 : 11;  // (on phones the .ph columns are hidden)
     const row = (r) => `<tr class="link" data-go="${tlink(r.team)}" style="--p:${r.gp ? Math.round((100 * r.w) / r.gp) : 0}%"><td class="rk">${r.rank}</td>
         <td class="l sticky"><span class="tc">${logo(r.team)}<b>${compact ? `<span class="wide">${esc(r.team)}</span><span class="narrow">${esc(short(r.team))}</span>` : esc(r.team)}</b></span></td><td>${r.w}</td><td>${r.l}</td>
-        ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td>${r.gb ? r.gb : "–"}</td><td>${r.ppg.toFixed(1)}</td><td>${r.oppg.toFixed(1)}</td><td><span class="fm" role="img" aria-label="Last five: ${r.last5.join(" ")}">${r.last5.map((x) => `<i class="${x}"></i>`).join("")}</span></td>`}
+        ${compact ? "" : `<td>${r.gp ? (r.w / r.gp).toFixed(3).replace(/^0/, "") : ".000"}</td><td class="ph">${r.gb ? r.gb : "–"}</td><td class="ph">${r.ppg.toFixed(1)}</td><td class="ph">${r.oppg.toFixed(1)}</td><td class="ph"><span class="fm" role="img" aria-label="Last five: ${r.last5.join(" ")}">${r.last5.map((x) => `<i class="${x}"></i>`).join("")}</span></td>`}
         <td class="stk ${r.streak ? r.streak[0] : ""}">${r.streak || "–"}</td></tr>`;
     const body = TABLE.map((r) => row(r) + (r.rank === 4 && TABLE.length > 4 ? `<tr class="cut" aria-hidden="true"><td colspan="${cols}"><span>Playoff line</span></td></tr>` : "")).join("");
     return `<div class="ladder scroll"><table>
-      <thead><tr><th>#</th><th class="l sticky">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th>GB</th><th>PPG</th><th>OPPG</th><th>L5</th>"}<th>Strk</th></tr></thead>
+      <thead><tr><th>#</th><th class="l sticky">Team</th><th>W</th><th>L</th>${compact ? "" : "<th>PCT</th><th class=\"ph\">GB</th><th class=\"ph\">PPG</th><th class=\"ph\">OPPG</th><th class=\"ph\">L5</th>"}<th>Strk</th></tr></thead>
       <tbody>${body}</tbody></table></div>`;
   }
 
@@ -761,11 +761,14 @@
       const days = (list) => { const out = []; list.forEach((g) => { const d = g.date.slice(0, 10); const last = out[out.length - 1]; last && last.d === d ? last.gs.push(g) : out.push({ d, gs: [g] }); }); return out; };
       const block = ({ d, gs }) => `<section class="dayblock"><div class="dayhead"><b>${esc(stageOf(gs[0]))}</b><span>${esc(dfmt(d + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(gs[0].venue || L.venue)}</span></div><div class="games-grid">${gs.map(gameCard).join("")}</div></section>`;
       const coming = ALL.filter((g) => !g.played);
-      const done = ALL.filter((g) => g.played);
+      const doneAll = ALL.filter((g) => g.played);
+      const GL = 16, allGames = store.get("gamesAll", false);
+      const done = allGames ? doneAll : doneAll.slice(-GL);
       if (tab === "results") setTimeout(() => { const el = document.getElementById("results"); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 140 }); }, 0);
       return head(`${L.name} · ${L.season}`, "Games") + `<div class="stack">
         ${coming.length ? `<section id="upcoming">${sh("Upcoming", null, `${coming.length} to play`)}<div class="stack">${days(coming).map(block).join("")}</div></section>` : ""}
-        <section id="results">${sh("Finished", null, `${done.length} played`)}<div class="stack">${days(done).reverse().map(block).join("") || `<p class="card empty">No games played yet.</p>`}</div></section>
+        <section id="results">${sh("Finished", null, `${doneAll.length} played`)}<div class="stack">${days(done).reverse().map(block).join("") || `<p class="card empty">No games played yet.</p>`}</div>
+          ${doneAll.length > GL ? `<button class="btn ghost more-btn" data-showgames="${allGames ? "0" : "1"}">${allGames ? "Show latest " + GL : "Show all " + doneAll.length + " games"}</button>` : ""}</section>
       </div>`;
     },
 
@@ -785,6 +788,7 @@
       const sortKey = store.get("sort", "pts");
       const filter = store.get("teamFilter", "all");
       const cols = [["MIN", "min"], ["PTS", "pts"], ["REB", "reb"], ["AST", "ast"], ["STL", "stl"], ["BLK", "blk"], ["TOV", "tov"], ["FG%", "fgp"], ["3P%", "tpp"], ["FT%", "ftp"], ["EFF", "eff"]];
+      const phoneCol = (k) => !["pts", "reb", "ast", "eff"].includes(k) ? " ph" : "";   // phones show only these four
       const val = (s, k) => {
         if (k === "fgp") return s.t.fga ? s.t.fgm / s.t.fga : 0;
         if (k === "tpp") return s.t.tpa ? s.t.tpm / s.t.tpa : 0;
@@ -792,13 +796,16 @@
         return perGame(s, k);
       };
       const show = (s, k) => (["fgp", "tpp", "ftp"].includes(k) ? (val(s, k) * 100).toFixed(1) : val(s, k).toFixed(1));
-      const rows = Object.values(SEASON).filter((s) => filter === "all" || short(s.p.team) === filter).sort((a, b) => val(b, sortKey) - val(a, sortKey));
+      const everyone = Object.values(SEASON).filter((s) => filter === "all" || short(s.p.team) === filter).sort((a, b) => val(b, sortKey) - val(a, sortKey));
+      const LIMIT = 25, all = store.get("showAll", false);
+      const rows = all ? everyone : everyone.slice(0, LIMIT);
       return head(L.season, "Stats") + `<div class="stack">${tabs}
         <label class="filter"><span class="label">Team</span><select data-filter>${[["all", "All teams"], ...teamNames.map((t) => [short(t), t])].map(([v, l]) => `<option value="${esc(v)}"${v === filter ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         <div class="card scroll"><table>
-          <thead><tr><th>#</th><th class="l sticky">Player</th><th>Team</th><th>GP</th>${cols.map(([l, k]) => `<th class="${k === sortKey ? "on" : ""}"><button data-sort="${k}" aria-pressed="${k === sortKey}">${l}</button></th>`).join("")}</tr></thead>
-          <tbody>${rows.map((s, i) => `<tr class="link" data-go="${plink(s.p)}"><td>${i + 1}</td><td class="l sticky">${esc(s.p.name)}</td><td><span class="tc">${logo(s.p.team)}${esc(short(s.p.team))}</span></td><td>${s.gp}</td>${cols.map(([, k]) => `<td class="${k === sortKey ? "on" : ""}">${show(s, k)}</td>`).join("")}</tr>`).join("")}</tbody>
+          <thead><tr><th>#</th><th class="l sticky">Player</th><th class="ph">Team</th><th class="ph">GP</th>${cols.map(([l, k]) => `<th class="${(k === sortKey ? "on" : "") + phoneCol(k)}"><button data-sort="${k}" aria-pressed="${k === sortKey}">${l}</button></th>`).join("")}</tr></thead>
+          <tbody>${rows.map((s, i) => `<tr class="link" data-go="${plink(s.p)}"><td>${i + 1}</td><td class="l sticky">${esc(s.p.name)}<small class="pt">${esc(short(s.p.team))} · ${s.gp} GP</small></td><td class="ph"><span class="tc">${logo(s.p.team)}${esc(short(s.p.team))}</span></td><td class="ph">${s.gp}</td>${cols.map(([, k]) => `<td class="${(k === sortKey ? "on" : "") + phoneCol(k)}">${show(s, k)}</td>`).join("")}</tr>`).join("")}</tbody>
         </table></div>
+        ${everyone.length > LIMIT ? `<button class="btn ghost more-btn" data-showall="${all ? "0" : "1"}">${all ? "Show top " + LIMIT : "Show all " + everyone.length + " players"}</button>` : ""}
         <p class="note">Per game. Tap a column to sort, or a player for their game log.</p></div>`;
     },
 
@@ -1097,6 +1104,10 @@
     if (ph) { const a = albumById(decodeURIComponent(location.hash.split("/")[1] || "")); if (a) openPhoto(a, +ph.dataset.photo); return; }
     const go = e.target.closest("[data-go]");
     if (go) { location.hash = go.dataset.go; return; }
+    const mg = e.target.closest("[data-showgames]");
+    if (mg) { store.set("gamesAll", mg.dataset.showgames === "1"); route(); return; }
+    const more = e.target.closest("[data-showall]");
+    if (more) { store.set("showAll", more.dataset.showall === "1"); route(); return; }
     const sort = e.target.closest("[data-sort]");
     if (sort) { store.set("sort", sort.dataset.sort); route(); return; }
     const tab = e.target.closest("[data-tab]");
