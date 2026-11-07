@@ -21,9 +21,18 @@
   // A team's logo: the league's own picture when there is one, else a designed crest.
   const logo = (name, size = "sm") => {
     const t = TEAMS[name], img = t ? t.img : L.img;
-    if (img) return `<span class="logo ${size} pic" style="--c:${esc(t ? t.color : L.color)}" aria-hidden="true"><img src="${esc(img)}" alt=""></span>`;
+    if (img) return `<span class="logo ${size} pic" data-logo="${t ? esc(name) : ""}" style="--c:${esc(t ? t.color : L.color)}" aria-hidden="true"><img src="${esc(img)}" alt=""></span>`;
     return `<span class="logo ${size} crest" aria-hidden="true">${t ? crest(name) : leagueCrest()}</span>`;
   };
+
+  // If a logo picture cannot be loaded (Hooperville down or slow), swap in the designed crest instead of a broken icon.
+  document.addEventListener("error", (e) => {
+    const im = e.target, box = im && im.tagName === "IMG" && im.closest ? im.closest(".logo.pic") : null;
+    if (!box) return;
+    const n = box.getAttribute("data-logo");
+    box.classList.remove("pic"); box.classList.add("crest");
+    box.innerHTML = n && TEAMS[n] ? crest(n) : leagueCrest();
+  }, true);
 
   // ---------- crests: badges drawn from each team's colour and initials, until real logos are added ----------
   const hexParts = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0x888888; return [n >> 16, (n >> 8) & 255, n & 255]; };
