@@ -110,8 +110,8 @@ http.createServer((req, res) => {
   }
   if (route === "/api/site-data") {
     siteData()
-      .then((data) => (data ? sendJson(res, 200, data) : sendJson(res, 404, { error: "No matching league in Hooperville" })))
-      .catch((err) => { console.error(err.message); sendJson(res, 502, { error: "Hooperville is not reachable" }); });
+      .then((data) => (data ? sendJson(res, 200, data) : sendJson(res, 404, { error: "No matching league on hoopr.id" })))
+      .catch((err) => { console.error(err.message); sendJson(res, 502, { error: "hoopr.id is not reachable", why: String(err.message).slice(0, 300) }); });
     return;
   }
   let file = decodeURIComponent(new URL(req.url, "http://x").pathname);

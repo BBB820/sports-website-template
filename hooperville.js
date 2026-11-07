@@ -133,16 +133,20 @@ async function inBatches(items, size, fn) {
 
 // Use the first address that answers with Hooperville's league list.
 async function connect() {
-  let lastError;
+  let lastError; const problems = [];
   for (const base of ADDRESSES) {
     try {
       const res = await hvFetch(base + "/api/leagues", { headers: { accept: "application/json" }, signal: AbortSignal.timeout(10000) });
       const list = res.ok ? await res.json() : null;
       if (Array.isArray(list)) { BASE = base; return list; }
-      lastError = new Error(`${base}: no league list`);
-    } catch (err) { lastError = err; }
+      const host = new URL(base).host;
+      problems.push(res.status === 401
+        ? `${host}: locked (early access)${EARLY_CODE ? ": the HOOPERVILLE_EARLY_CODE here is not accepted" : ": HOOPERVILLE_EARLY_CODE is not set on this site"}`
+        : `${host}: answered ${res.status}`);
+      lastError = new Error(problems[problems.length - 1]);
+    } catch (err) { problems.push(`${new URL(base).host}: ${err.message}`); lastError = err; }
   }
-  throw lastError;
+  const e = new Error(problems.join("; ")); e.problems = problems; throw e;
 }
 
 async function findSlug(leagues) {
