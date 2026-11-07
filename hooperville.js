@@ -7,6 +7,13 @@
 //   LEAGUE_SLUG      the league's address in Hooperville (the part after /l/). Default bro-league;
 //                    if that is missing, the first league whose name contains "bro".
 
+// Hooperville's player site can be behind an early-access lock (it answers 401 "hoopr.id is in early access").
+// Set HOOPERVILLE_EARLY_CODE (the same code the owner gives people) on this site's server and every request to
+// Hooperville carries the pass cookie that code earns, so the stats and logos keep flowing. Same hash as Hooperville's early.ts.
+const EARLY_CODE = (process.env.HOOPERVILLE_EARLY_CODE || "").trim();
+const EARLY_COOKIE = EARLY_CODE ? "hoopr_early=" + require("crypto").createHash("sha256").update("early:" + EARLY_CODE).digest("hex") : "";
+const hvFetch = (url, opts = {}) => fetch(url, EARLY_COOKIE ? { ...opts, headers: { ...(opts.headers || {}), cookie: EARLY_COOKIE } } : opts);
+
 const OLD_ADDRESS = "https://web-production-69499.up.railway.app";
 const ADDRESSES = [...new Set([process.env.HOOPERVILLE_URL, "https://hoopr.id", OLD_ADDRESS]
   .filter(Boolean).map((u) => u.replace(/\/+$/, "")))];
@@ -56,7 +63,7 @@ function registerLogo(key, path) {
 async function leagueLogo(slug) {
   const path = `/logos/${encodeURIComponent(slug)}.webp`;
   try {
-    const res = await fetch(BASE + path, { method: "HEAD", signal: AbortSignal.timeout(8000) });
+    const res = await hvFetch(BASE + path, { method: "HEAD", signal: AbortSignal.timeout(8000) });
     if (res.ok && /^image\//.test(res.headers.get("content-type") || "")) return registerLogo("league", path);
   } catch { /* no league logo */ }
   return null;
@@ -68,7 +75,7 @@ async function logoFile(key) {
   const hit = logoCache.get(key);
   if (hit && hit.src === src && Date.now() - hit.at < LOGO_TTL) return hit;
   try {
-    const res = await fetch(src, { signal: AbortSignal.timeout(15000) });
+    const res = await hvFetch(src, { signal: AbortSignal.timeout(15000) });
     const type = (res.headers.get("content-type") || "").split(";")[0].trim();
     if (!res.ok || !/^image\/(png|jpeg|webp|gif)$/.test(type)) throw new Error(`logo ${key}: ${res.status} ${type}`);
     const body = Buffer.from(await res.arrayBuffer());
@@ -112,7 +119,7 @@ function localTime(iso) {
 }
 
 async function get(path) {
-  const res = await fetch(BASE + "/api" + path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
+  const res = await hvFetch(BASE + "/api" + path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Hooperville ${path}: ${res.status}`);
   return res.json();
 }
@@ -129,7 +136,7 @@ async function connect() {
   let lastError;
   for (const base of ADDRESSES) {
     try {
-      const res = await fetch(base + "/api/leagues", { headers: { accept: "application/json" }, signal: AbortSignal.timeout(10000) });
+      const res = await hvFetch(base + "/api/leagues", { headers: { accept: "application/json" }, signal: AbortSignal.timeout(10000) });
       const list = res.ok ? await res.json() : null;
       if (Array.isArray(list)) { BASE = base; return list; }
       lastError = new Error(`${base}: no league list`);

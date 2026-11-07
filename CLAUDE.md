@@ -25,6 +25,9 @@ This project has nothing to do with Casa Pards (`BBB820/casapards`); never chang
   `/api/teams/:id`, `/api/games/:id`, `/api/seasons/:id/playoffs`), converts it to the site's data shape
   (same as `data.js`) and caches it for two minutes. League: `LEAGUE_SLUG` env var, else `bro-league`
   (else the first league whose name contains "bro"). Address: `HOOPERVILLE_URL`, else hoopr.id, else the old Railway address.
+  Since Nov 6 Hooperville's player site has an early-access lock (API answers 401 "hoopr.id is in early access" to anyone without the code; the
+  stats and logos stop loading). Set `HOOPERVILLE_EARLY_CODE` (the early-access code, kept in Hooperville's gitignored `.env.early-access.txt`) on this
+  site's Railway service and every request to Hooperville carries the pass cookie. Without it the site shows its last cached data or the sample.
 - `index.html` fetches `/api/site-data`; if that fails or finds no league it falls back to the sample in
   `data.js`. The footer says "Live stats from hoopr.id" or "Sample data".
 - `app.js` renders every page with hash routing: home, games, standings, stats, playoffs, teams, team/CODE,
