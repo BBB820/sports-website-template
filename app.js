@@ -752,11 +752,8 @@
       return `${hero(slides.length ? slides : [autos.league])}
         ${signupBand()}
         ${nextRound.length ? `<section>${sh(`Coming up`, "#games", "All games")}<p class="sub">${esc(stageOf(nextRound[0]))} · ${esc(dfmt(nextDay + "T12:00", { weekday: "long", month: "long", day: "numeric" }))} · ${esc(nextRound[0].venue || L.venue)}</p><div class="games-grid swipe">${nextRound.map(gameCard).join("")}</div></section>` : ""}
-        <div class="two">
-          <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
-          ${lastRound.length ? `<section>${sh(`${stageOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
-        </div>
-        ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
+        <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
+        ${PO && PO.champion ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
         <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
         ${C().albums.length ? `<section>${sh("Photos", "#photos", "All albums")}${albumCards(C().albums.slice(0, 3)).replace('class="albumgrid"', 'class="albumgrid swipe"')}</section>` : ""}
         <section>${sh("News", "#news", "All news")}${newsCards(newsItems().slice(0, 3)).replace('class="newsgrid"', 'class="newsgrid swipe"')}</section>`;
