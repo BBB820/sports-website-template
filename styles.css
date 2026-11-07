@@ -103,6 +103,12 @@ h1, h2 { font-family: var(--body); font-weight: 700; letter-spacing: 0; line-hei
 .nav a[aria-current="page"]::after { transform: scaleX(1); }
 .theme { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--bar-line); background: none; color: var(--bar-ink); }
 .theme:hover { background: var(--raise); }
+/* Season picker beside the light/dark button: a quiet pill, like the theme button. */
+.season-pick { flex: none; margin-left: auto; position: relative; display: flex; }
+.season-pick select { appearance: none; -webkit-appearance: none; height: 36px; padding: 0 30px 0 14px; border: 1px solid var(--bar-line); border-radius: 999px; background: none; color: var(--bar-ink); font: 600 .85rem/1 var(--body); cursor: pointer; }
+.season-pick select:hover { background: var(--raise); }
+.season-pick::after { content: ""; position: absolute; right: 13px; top: 50%; width: 6px; height: 6px; margin-top: -5px; border: solid var(--bar-soft); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); pointer-events: none; }
+.season-pick option { color: #0b0d12; background: #fff; }
 .stripe { display: none; }
 
 main { max-width: 1168px; margin: 0 auto; padding: 0 var(--gutter) 104px; display: grid; gap: var(--gap); }

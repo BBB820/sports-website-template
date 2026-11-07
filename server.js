@@ -109,8 +109,8 @@ http.createServer((req, res) => {
     return;
   }
   if (route === "/api/site-data") {
-    siteData()
-      .then((data) => (data ? sendJson(res, 200, data) : sendJson(res, 404, { error: "No matching league on hoopr.id" })))
+    siteData(new URL(req.url, "http://x").searchParams.get("season") || "")
+      .then((data) => (data ? sendJson(res, 200, data) : sendJson(res, 404, { error: "No matching league or season on hoopr.id" })))
       .catch((err) => { console.error(err.message); sendJson(res, 502, { error: "hoopr.id is not reachable", why: String(err.message).slice(0, 300) }); });
     return;
   }

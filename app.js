@@ -1141,6 +1141,19 @@
   if (SU) document.querySelectorAll('a[href="#signup"]').forEach((a) => (a.hidden = false));
   if (C().albums.length) document.querySelectorAll('a[href="#photos"]').forEach((a) => (a.hidden = false));
   document.getElementById("brand").innerHTML = `${logo(null)}<b>${esc(L.name)}</b>`;
+  // Season picker (owner, Nov 2026: "Add Season 6 too"): each season is the whole site for that season, at ?season=N.
+  // Switching keeps the page (Standings stays Standings) but not a game, team or player, which belong to one season.
+  if (S.seasons && S.seasons.length > 1) {
+    const pick = document.createElement("label");
+    pick.className = "season-pick";
+    pick.innerHTML = `<select aria-label="Season">${S.seasons.map((s) =>
+      `<option value="${esc(s.current ? "" : s.key)}"${s.shown ? " selected" : ""}>${esc(s.name)}</option>`).join("")}</select>`;
+    document.querySelector(".theme").before(pick);
+    pick.querySelector("select").addEventListener("change", (e) => {
+      const page = (location.hash.split("/")[0] || "#home");
+      location.href = location.pathname + (e.target.value ? "?season=" + encodeURIComponent(e.target.value) : "") + page;
+    });
+  }
   const src = S.source
     ? `<span class="src live">Live stats from <a href="${esc(S.source.url)}" rel="noopener">${esc(S.source.name)}</a> · ${esc(S.source.league)} · updated ${esc(time(S.source.updated))}</span>`
     : `<span class="src">Sample data · live stats appear once the league is on hoopr.id</span>`;
