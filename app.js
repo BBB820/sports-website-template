@@ -756,7 +756,6 @@
           <section>${sh("Standings", "#standings", "Full table")}${standingsTable(true)}</section>
           ${lastRound.length ? `<section>${sh(`${stageOf(lastRound[0])} results`, "#games/results", "All results")}<div class="card rs-list">${lastRound.map(result).join("")}</div></section>` : ""}
         </div>
-        ${PO && !PO.champion ? (() => { const r = [...PO.rounds].reverse().find((x) => x.series.some((y) => y.a || y.b)) || PO.rounds[0]; return `<section>${sh(`Playoffs · ${esc(r.name)}`, "#playoffs", "Bracket")}<div class="series-grid">${r.series.map(seriesCard).join("")}</div></section>`; })() : ""}
         ${(PO && PO.champion) || (!upcoming.length && played.length) ? `<section>${sh("Season awards", PO ? "#playoffs" : null, PO ? "Playoffs" : esc(L.season))}${awards()}</section>` : ""}
         <section>${sh("League leaders", "#stats", "All stats")}<div class="ltiles">${tile("Points", "pts", "ppg")}${tile("Rebounds", "reb", "rpg")}${tile("Assists", "ast", "apg")}${tile("Efficiency", "eff", "eff")}</div></section>
         ${C().albums.length ? `<section>${sh("Photos", "#photos", "All albums")}${albumCards(C().albums.slice(0, 3)).replace('class="albumgrid"', 'class="albumgrid swipe"')}</section>` : ""}
